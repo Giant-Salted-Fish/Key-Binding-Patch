@@ -1,0 +1,15 @@
+{
+	"required": true,
+	"package": "gsf.kbp.client.mixin",
+	"refmap": "mixins.kbp.refmap.json",
+	"mixins": [],
+	"client": [
+		"ControlsScreenMixin",
+		"GameSettingsMixin",
+		"KeyBindingMixin",
+		"ToggleableKeyBindingMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
