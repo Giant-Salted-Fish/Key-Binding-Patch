@@ -93,7 +93,7 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	private Set< Input > default_combinations = Collections.emptySet();
 	
 	@Unique
-	private Set< Input > combination_set = this.defaultCombinations();
+	private Set< Input > combinations = this.defaultCombinations();
 	
 	@Unique
 	private final ArrayList< BooleanSupplier > condition_list = new ArrayList<>();
@@ -130,14 +130,14 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	
 	@Override
 	public Set< Input > combinations() {
-		return this.combination_set;
+		return this.combinations;
 	}
 	
 	@Override
 	public void setKeyAndCombinations( Input key, Set< Input > combinations )
 	{
 		this.setKey( key );
-		this.combination_set = combinations;
+		this.combinations = combinations;
 	}
 	
 	@Override
@@ -206,8 +206,10 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	@Override
-	public final void _setDefaultCombinations( Set< Input > combinations ) {
+	public final void _setDefaultCombinations( Set< Input > combinations )
+	{
 		this.default_combinations = combinations;
+		this.combinations = combinations;
 	}
 	
 	@Override
@@ -233,9 +235,9 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	{
 		final IKeyConflictContext ctx0 = this.getKeyConflictContext();
 		final IKeyConflictContext ctx1 = other.getKeyConflictContext();
-		final boolean is_context_conflict = ctx0.conflicts( ctx1 );
-		if ( !is_context_conflict ) {
-			return this.getKey().equals( other.getKey() );
+		final boolean is_ctx_conflict = ctx0.conflicts( ctx1 ) || ctx1.conflicts( ctx0 );
+		if ( !is_ctx_conflict ) {
+			return false;
 		}
 		
 		final IPatchedKeyBinding other_ = ( IPatchedKeyBinding ) other;
