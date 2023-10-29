@@ -27,11 +27,19 @@ public interface IPatchedKeyBinding
 		throw new RuntimeException();
 	}
 	
+	default String addPressCallback( Runnable callback ) {
+		throw new RuntimeException();
+	}
+	
 	default Optional< Runnable > regisPressCallback(
 		String identifier, Runnable callback
 	) { throw new RuntimeException(); }
 	
 	default Runnable unregisPressCallback( String identifier ) {
+		throw new RuntimeException();
+	}
+	
+	default String addReleaseCallback( Runnable callback ) {
 		throw new RuntimeException();
 	}
 	

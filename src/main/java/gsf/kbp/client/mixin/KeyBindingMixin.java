@@ -141,6 +141,18 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	@Override
+	public String addPressCallback( Runnable callback )
+	{
+		String identifier = callback.toString();
+		while ( this.press_callbacks.containsKey( identifier ) ) {
+			identifier += "_";
+		}
+		
+		this.regisPressCallback( identifier, callback );
+		return identifier;
+	}
+	
+	@Override
 	public Optional< Runnable > regisPressCallback(
 		String identifier, Runnable callback
 	) {
@@ -151,6 +163,18 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	@Override
 	public Runnable unregisPressCallback( String identifier ) {
 		return this.press_callbacks.remove( identifier );
+	}
+	
+	@Override
+	public String addReleaseCallback( Runnable callback )
+	{
+		String identifier = callback.toString();
+		while ( this.release_callbacks.containsKey( identifier ) ) {
+			identifier += "_";
+		}
+		
+		this.regisPressCallback( identifier, callback );
+		return identifier;
 	}
 	
 	@Override
