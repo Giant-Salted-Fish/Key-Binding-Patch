@@ -46,15 +46,15 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	@Shadow
 	private static Map< String, KeyBinding > ALL;
 	
-	@Final
-	@Shadow
-	private static KeyBindingMap MAP;
-	static
-	{
-		// No longer use it, so clear it.
-		// TODO: Fix this, this seems to have no effect.
-		MAP.clearMap();
-	}
+//	@Final
+//	@Shadow
+//	private static KeyBindingMap MAP;
+//	static
+//	{
+//		// No longer use it, so clear it.
+//		// TODO: Fix this, this seems to have no effect.
+//		MAP.clearMap();
+//	}
 	
 	@Final
 	@Shadow

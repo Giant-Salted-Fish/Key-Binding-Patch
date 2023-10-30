@@ -6,7 +6,7 @@ showAsResourcePack=false
 
 [[mods]]
 	modId="key_binding_patch"
-	version="1.16.5-1.0.2.3"
+	version="1.16.5-1.0.2.4"
 	displayName="Key Binding Patch"
 	updateJSONURL="https://raw.githubusercontent.com/Giant-Salted-Fish/Key-Binding-Patch/1.16.X/update.json"
 	displayURL=""

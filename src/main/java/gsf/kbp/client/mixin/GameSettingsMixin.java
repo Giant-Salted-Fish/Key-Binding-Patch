@@ -6,6 +6,7 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.client.util.InputMappings.Input;
 import net.minecraft.nbt.CompoundNBT;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -21,6 +23,21 @@ public abstract class GameSettingsMixin
 {
 	@Shadow
 	public KeyBinding[] keyMappings;
+	
+	@Final
+	@Shadow
+	private File optionsFile;
+	
+	@Inject( method = "load", at = @At( "HEAD" ) )
+	public void onLoad( CallbackInfo ci )
+	{
+		if ( !this.optionsFile.exists() )
+		{
+			// Mapping reset would not be called if options file does not exist.
+			// We need to call it manually here.
+			KeyBinding.resetMapping();
+		}
+	}
 	
 	@Inject(
 		method = "load",
