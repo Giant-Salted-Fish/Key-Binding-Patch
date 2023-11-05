@@ -5,10 +5,10 @@
 	"refmap": "mixins.kbp.refmap.json",
 	"mixins": [],
 	"client": [
-		"ControlsScreenMixin",
-		"GameSettingsMixin",
-		"KeyBindingMixin",
-		"ToggleableKeyBindingMixin"
+		"KeyBindsScreenMixin",
+		"OptionsMixin",
+		"KeyMappingMixin",
+		"ToggleKeyMappingMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

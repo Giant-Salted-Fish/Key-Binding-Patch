@@ -1,7 +1,7 @@
 package gsf.kbp.client.api;
 
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.client.util.InputMappings.Input;
+import com.mojang.blaze3d.platform.InputConstants.Key;
+import net.minecraft.client.KeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -9,21 +9,21 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * You can cast {@link KeyBinding} instance to this interface to if you need to
+ * You can cast {@link KeyMapping} instance to this interface to if you need to
  * use patched functionalities on it.
  */
 @OnlyIn( Dist.CLIENT )
 public interface IPatchedKeyBinding
 {
-	default Set< Input > combinations() {
+	default Set< Key > combinations() {
 		throw new RuntimeException();
 	}
 	
-	default void setKeyAndCombinations( Input key, Set< Input > combinations ) {
+	default void setKeyAndCombinations( Key key, Set< Key > combinations ) {
 		throw new RuntimeException();
 	}
 	
-	default Set< Input > defaultCombinations() {
+	default Set< Key > defaultCombinations() {
 		throw new RuntimeException();
 	}
 	

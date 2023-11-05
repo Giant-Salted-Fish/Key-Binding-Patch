@@ -1,8 +1,8 @@
 package gsf.kbp.client;
 
+import com.mojang.blaze3d.platform.InputConstants.Key;
 import gsf.kbp.client.api.IPatchedKeyBinding;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.client.util.InputMappings.Input;
+import net.minecraft.client.KeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -14,7 +14,7 @@ import java.util.function.BooleanSupplier;
  * Only use {@link IPatchedKeyBinding} unless you know what you are doing. This
  * interface is used as an inner helper for the mixin implementation.
  *
- * @see gsf.kbp.client.mixin.KeyBindingMixin
+ * @see gsf.kbp.client.mixin.KeyMappingMixin
  */
 @OnlyIn( Dist.CLIENT )
 public interface IKeyBinding extends IPatchedKeyBinding
@@ -25,7 +25,7 @@ public interface IKeyBinding extends IPatchedKeyBinding
 	
 	void _incrClickCount();
 	
-	void _setDefaultCombinations( Set< Input > combinations );
+	void _setDefaultCombinations( Set< Key > combinations );
 	
-	KeyBinding _cast();
+	KeyMapping _cast();
 }

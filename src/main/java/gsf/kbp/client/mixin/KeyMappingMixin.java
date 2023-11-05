@@ -1,18 +1,17 @@
 package gsf.kbp.client.mixin;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.platform.InputConstants.Key;
+import com.mojang.blaze3d.platform.InputConstants.Type;
 import gsf.kbp.client.CombinationKey;
 import gsf.kbp.client.IKeyBinding;
 import gsf.kbp.client.api.IPatchedKeyBinding;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.client.util.InputMappings;
-import net.minecraft.client.util.InputMappings.Input;
-import net.minecraft.client.util.InputMappings.Type;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.client.extensions.IForgeKeybinding;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraftforge.client.extensions.IForgeKeyMapping;
 import net.minecraftforge.client.settings.IKeyConflictContext;
-import net.minecraftforge.client.settings.KeyBindingMap;
 import net.minecraftforge.client.settings.KeyModifier;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
@@ -38,13 +37,13 @@ import java.util.function.Function;
 import java.util.function.IntConsumer;
 
 
-@Mixin( KeyBinding.class )
-public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
+@Mixin( KeyMapping.class )
+public abstract class KeyMappingMixin implements IKeyBinding, IForgeKeyMapping
 {
 	// Shadow fields and methods.
 	@Final
 	@Shadow
-	private static Map< String, KeyBinding > ALL;
+	private static Map< String, KeyMapping > ALL;
 	
 //	@Final
 //	@Shadow
@@ -58,7 +57,7 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	
 	@Final
 	@Shadow
-	private Input defaultKey;
+	private Key defaultKey;
 	
 	@Shadow
 	boolean isDown;
@@ -73,27 +72,27 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	private KeyModifier keyModifier;
 	
 	@Shadow
-	public abstract void setKey( Input p_197979_1_ );
+	public abstract void setKey( Key p_197979_1_ );
 	
 	
 	// Added and fields and overwrite methods.
 	@Unique
-	private static final HashMap< Input, List< IKeyBinding > >
+	private static final HashMap< Key, List< IKeyBinding > >
 		UPDATE_TABLE = new HashMap<>();
 	
 	@Unique
-	private static final HashMap< Input, CombinationKey >
+	private static final HashMap< Key, CombinationKey >
 		COMBINATION_TABLE = new HashMap<>();
 	
 	@Unique
-	private static final HashSet< Input > ACTIVE_INPUTS = new HashSet<>();
+	private static final HashSet< Key > ACTIVE_INPUTS = new HashSet<>();
 	
 	
 	@Unique
-	private Set< Input > default_combinations = Collections.emptySet();
+	private Set< Key > default_combinations = Collections.emptySet();
 	
 	@Unique
-	private Set< Input > combinations = this.defaultCombinations();
+	private Set< Key > combinations = this.defaultCombinations();
 	
 	@Unique
 	private final ArrayList< BooleanSupplier > condition_list = new ArrayList<>();
@@ -105,14 +104,14 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	private final HashMap< String, Runnable > release_callbacks = new HashMap<>();
 	
 	@Inject(
-		method = "<init>(Ljava/lang/String;Lnet/minecraftforge/client/settings/IKeyConflictContext;Lnet/minecraftforge/client/settings/KeyModifier;Lnet/minecraft/client/util/InputMappings$Input;Ljava/lang/String;)V",
+		method = "<init>(Ljava/lang/String;Lnet/minecraftforge/client/settings/IKeyConflictContext;Lnet/minecraftforge/client/settings/KeyModifier;Lcom/mojang/blaze3d/platform/InputConstants$Key;Ljava/lang/String;)V",
 		at = @At( "RETURN" )
 	)
 	private void onNew(
 		String description,
 		IKeyConflictContext keyConflictContext,
 		KeyModifier keyModifier,
-		Input keyCode,
+		Key keyCode,
 		String category,
 		CallbackInfo info
 	) {
@@ -124,17 +123,17 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	@Override
-	public Set< Input > defaultCombinations() {
+	public Set< Key > defaultCombinations() {
 		return this.default_combinations;
 	}
 	
 	@Override
-	public Set< Input > combinations() {
+	public Set< Key > combinations() {
 		return this.combinations;
 	}
 	
 	@Override
-	public void setKeyAndCombinations( Input key, Set< Input > combinations )
+	public void setKeyAndCombinations( Key key, Set< Key > combinations )
 	{
 		this.setKey( key );
 		this.combinations = combinations;
@@ -206,15 +205,15 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	@Override
-	public final void _setDefaultCombinations( Set< Input > combinations )
+	public final void _setDefaultCombinations( Set< Key > combinations )
 	{
 		this.default_combinations = combinations;
 		this.combinations = combinations;
 	}
 	
 	@Override
-	public final KeyBinding _cast() {
-		return ( KeyBinding ) ( Object ) this;
+	public final KeyMapping _cast() {
+		return ( KeyMapping ) ( Object ) this;
 	}
 	
 	/**
@@ -231,7 +230,7 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	 * @reason Patch logic.
 	 */
 	@Overwrite
-	public boolean same( KeyBinding other )
+	public boolean same( KeyMapping other )
 	{
 		final IKeyConflictContext ctx0 = this.getKeyConflictContext();
 		final IKeyConflictContext ctx1 = other.getKeyConflictContext();
@@ -241,10 +240,10 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 		}
 		
 		final IPatchedKeyBinding other_ = ( IPatchedKeyBinding ) other;
-		final Set< Input > cmb0 = this.combinations();
-		final Set< Input > cmb1 = other_.combinations();
-		final Input key0 = this.getKey();
-		final Input key1 = other.getKey();
+		final Set< Key > cmb0 = this.combinations();
+		final Set< Key > cmb1 = other_.combinations();
+		final Key key0 = this.getKey();
+		final Key key1 = other.getKey();
 		return(
 			cmb0.contains( key1 ) || cmb1.contains( key0 )
 			|| key0.equals( key1 ) && cmb0.equals( cmb1 )
@@ -256,17 +255,17 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	 * @reason Patch logic.
 	 */
 	@Overwrite
-	public ITextComponent getTranslatedKeyMessage()
+	public Component getTranslatedKeyMessage()
 	{
-		final StringTextComponent plus = new StringTextComponent( " + " );
+		final TextComponent plus = new TextComponent( " + " );
 		final String key = this.getKey().getDisplayName().getString();
 		final String msg = this.combinations().stream()
-			.map( Input::getDisplayName )
-			.map( ITextComponent::getString )
+			.map( Key::getDisplayName )
+			.map( Component::getString )
 			.reduce( ( k0, k1 ) -> k0 + " + " + k1 )
 			.map( s -> s + " + " + key )
 			.orElse( key );
-		return new StringTextComponent( msg );
+		return new TextComponent( msg );
 	}
 	
 	/**
@@ -293,7 +292,7 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 		final String key = this.getKey().getName();
 		final String modifier = KeyModifier.NONE.toString();
 		final String combinations = this.combinations().stream()
-			.map( Input::getName )
+			.map( Key::getName )
 			.reduce( ( s0, s1 ) -> s0 + "+" + s1 )
 			.orElse( "" );
 		return String.format( "%s:%s:%s", key, modifier, combinations );
@@ -329,9 +328,9 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	@Override
-	public void setKeyModifierAndCode( KeyModifier keyModifier, Input keyCode )
+	public void setKeyModifierAndCode( KeyModifier keyModifier, Key keyCode )
 	{
-		final Set< Input > combinations = __getCombination( keyModifier );
+		final Set< Key > combinations = __getCombination( keyModifier );
 		this.setKeyAndCombinations( keyCode, combinations );
 	}
 	
@@ -345,7 +344,7 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	 * @reason Patch logic.
 	 */
 	@Overwrite
-	public static void click( Input key )
+	public static void click( Key key )
 	{
 		final Iterator< IKeyBinding > itr = UPDATE_TABLE
 			.getOrDefault( key, Collections.emptyList() ).iterator();
@@ -378,7 +377,7 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	 * @reason Patch logic.
 	 */
 	@Overwrite
-	public static void set( Input key, boolean is_down )
+	public static void set( Key key, boolean is_down )
 	{
 		if ( !is_down ) {
 			ACTIVE_INPUTS.remove( key );
@@ -457,11 +456,11 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 		// implementation only cares about the keyboard keys.
 		final Minecraft mc = Minecraft.getInstance();
 		final long window_handle = mc.getWindow().getWindow();
-		final Function< Input, Boolean > check_active = input -> {
+		final Function< Key, Boolean > check_active = input -> {
 			final boolean is_keyboard_key = input.getType() == Type.KEYSYM;
 			return(
-				is_keyboard_key && input != InputMappings.UNKNOWN
-				&& InputMappings.isKeyDown( window_handle, input.getValue() )
+				is_keyboard_key && input != InputConstants.UNKNOWN
+				&& InputConstants.isKeyDown( window_handle, input.getValue() )
 			);
 		};
 		
@@ -477,7 +476,7 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 		} );
 		
 		ALL.values().forEach( kb -> {
-			final Input key = kb.getKey();
+			final Key key = kb.getKey();
 			final boolean is_active = check_active.apply( key );
 			if ( is_active ) {
 				ACTIVE_INPUTS.add( key );
@@ -501,7 +500,7 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 		COMBINATION_TABLE.clear();
 		
 		ALL.values().stream().map( kb -> ( IKeyBinding ) kb ).forEach( kb -> {
-			if ( kb._cast().getKey() == InputMappings.UNKNOWN ) {
+			if ( kb._cast().getKey() == InputConstants.UNKNOWN ) {
 				return;
 			}
 			
@@ -545,7 +544,7 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	@Unique
-	private static BooleanSupplier __getCombinationKey( Input key )
+	private static BooleanSupplier __getCombinationKey( Key key )
 	{
 		final CombinationKey ck_ = COMBINATION_TABLE.compute(
 			key, ( k, ck ) -> ck != null ? ck : new CombinationKey() );
@@ -553,12 +552,12 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	@Unique
-	private static Set< Input > __getCombination( KeyModifier modifier )
+	private static Set< Key > __getCombination( KeyModifier modifier )
 	{
 		// Transform modifier to corresponding combination key.
-		final HashSet< Input > combinations = new HashSet<>();
+		final HashSet< Key > combinations = new HashSet<>();
 		final IntConsumer modifier_processor = m -> {
-			final Input input = Type.KEYSYM.getOrCreate( m );
+			final Key input = Type.KEYSYM.getOrCreate( m );
 			combinations.add( input );
 		};
 		

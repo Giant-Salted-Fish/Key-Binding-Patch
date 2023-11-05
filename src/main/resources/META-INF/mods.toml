@@ -1,6 +1,6 @@
 modLoader="javafml"
-loaderVersion="[32,)"
-license="All Rights Reserved."
+loaderVersion="[40,)"
+license="All rights reserved"
 issueTrackerURL="https://github.com/Giant-Salted-Fish/Key-Binding-Patch/issues"
 showAsResourcePack=false
 
@@ -20,13 +20,13 @@ Patches the vanilla Key binding system to support better key combinations and re
 [[dependencies.key_binding_patch]]
 	modId="forge"
 	mandatory=true
-	versionRange="[36,)"
+	versionRange="[40,)"
 	ordering="NONE"
 	side="CLIENT"
 
 [[dependencies.key_binding_patch]]
 	modId="minecraft"
 	mandatory=true
-	versionRange="[1.16.3,1.17)"
+	versionRange="[1.18.2,1.19)"
 	ordering="NONE"
 	side="CLIENT"

@@ -1,15 +1,15 @@
 package gsf.kbp.client.mixin;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.platform.InputConstants.Key;
 import gsf.kbp.client.api.IPatchedKeyBinding;
-import net.minecraft.client.GameSettings;
-import net.minecraft.client.gui.screen.ControlsScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.SettingsScreen;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.client.util.InputMappings;
-import net.minecraft.client.util.InputMappings.Input;
-import net.minecraft.util.Util;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.Util;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Options;
+import net.minecraft.client.gui.screens.OptionsSubScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.controls.KeyBindsScreen;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -17,11 +17,11 @@ import org.spongepowered.asm.mixin.Unique;
 
 import java.util.HashSet;
 
-@Mixin( ControlsScreen.class )
-public abstract class ControlsScreenMixin extends SettingsScreen
+@Mixin( KeyBindsScreen.class )
+public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 {
 	@Shadow
-	public KeyBinding selectedKey;
+	public KeyMapping selectedKey;
 	
 	@Shadow
 	public long lastKeySelection;
@@ -30,18 +30,18 @@ public abstract class ControlsScreenMixin extends SettingsScreen
 	// It seems that the Forge will automatically set #selectedKey to null \
 	// when key is released, so we have to manually save its reference to use.
 	@Unique
-	private KeyBinding shadow_selected_key;
+	private KeyMapping shadow_selected_key;
 	
 	@Unique
-	private Input last_active_key = InputMappings.UNKNOWN;
+	private Key last_active_key = InputConstants.UNKNOWN;
 	
 	@Unique
-	private final HashSet< Input > combinations = new HashSet<>();
+	private final HashSet< Key > combinations = new HashSet<>();
 	
-	public ControlsScreenMixin(
+	public KeyBindsScreenMixin(
 		Screen parent,
-		GameSettings settings,
-		ITextComponent title
+		Options settings,
+		Component title
 	) { super( parent, settings, title ); }
 	
 	@Override
@@ -56,13 +56,13 @@ public abstract class ControlsScreenMixin extends SettingsScreen
 		this.shadow_selected_key = this.selectedKey;
 		if ( key == GLFW.GLFW_KEY_ESCAPE )
 		{
-			this.last_active_key = InputMappings.UNKNOWN;
+			this.last_active_key = InputConstants.UNKNOWN;
 			this.combinations.clear();
 			this.__applyKeyAndCombinations();
 		}
 		else
 		{
-			final Input input = InputMappings.getKey( key, scan_code );
+			final Key input = InputConstants.getKey( key, scan_code );
 			this.__appendActiveInput( input );
 		}
 		
@@ -89,7 +89,7 @@ public abstract class ControlsScreenMixin extends SettingsScreen
 		}
 		
 		this.shadow_selected_key = this.selectedKey;
-		final Input input = InputMappings.Type.MOUSE.getOrCreate( button );
+		final Key input = InputConstants.Type.MOUSE.getOrCreate( button );
 		this.__appendActiveInput( input );
 		return true;
 	}
@@ -99,7 +99,7 @@ public abstract class ControlsScreenMixin extends SettingsScreen
 	{
 		if (
 			this.selectedKey == null
-			|| this.last_active_key == InputMappings.UNKNOWN
+			|| this.last_active_key == InputConstants.UNKNOWN
 		) {
 			return super.mouseReleased( x, y, button );
 		}
@@ -109,14 +109,14 @@ public abstract class ControlsScreenMixin extends SettingsScreen
 	}
 	
 	@Unique
-	private void __appendActiveInput( Input input )
+	private void __appendActiveInput( Key input )
 	{
 		// Skip if is repeated keys.
 		if ( input.equals( this.last_active_key ) ) {
 			return;
 		}
 		
-		if ( this.last_active_key != InputMappings.UNKNOWN ) {
+		if ( this.last_active_key != InputConstants.UNKNOWN ) {
 			this.combinations.add( this.last_active_key );
 		}
 		this.last_active_key = input;
@@ -126,13 +126,13 @@ public abstract class ControlsScreenMixin extends SettingsScreen
 	private void __applyKeyAndCombinations()
 	{
 		final IPatchedKeyBinding kb = ( IPatchedKeyBinding ) this.shadow_selected_key;
-		final HashSet< Input > combinations = new HashSet<>( this.combinations );
+		final HashSet< Key > combinations = new HashSet<>( this.combinations );
 		kb.setKeyAndCombinations( this.last_active_key, combinations );
 		
 		this.options.setKey( this.shadow_selected_key, this.last_active_key );
-		KeyBinding.resetMapping();
+		KeyMapping.resetMapping();
 		
-		this.last_active_key = InputMappings.UNKNOWN;
+		this.last_active_key = InputConstants.UNKNOWN;
 		this.combinations.clear();
 		this.selectedKey = null;
 		this.shadow_selected_key = null;

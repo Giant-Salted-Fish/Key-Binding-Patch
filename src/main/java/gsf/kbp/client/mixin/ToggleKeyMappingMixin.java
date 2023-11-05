@@ -1,8 +1,8 @@
 package gsf.kbp.client.mixin;
 
 import gsf.kbp.client.IKeyBinding;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.client.settings.ToggleableKeyBinding;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.ToggleKeyMapping;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -11,9 +11,9 @@ import org.spongepowered.asm.mixin.Unique;
 
 import java.util.function.BooleanSupplier;
 
-@Mixin( ToggleableKeyBinding.class )
-public abstract class ToggleableKeyBindingMixin
-	extends KeyBinding implements IKeyBinding
+@Mixin( ToggleKeyMapping.class )
+public abstract class ToggleKeyMappingMixin
+	extends KeyMapping implements IKeyBinding
 {
 	@Final
 	@Shadow
@@ -23,7 +23,7 @@ public abstract class ToggleableKeyBindingMixin
 	@Unique
 	private boolean is_active;
 	
-	public ToggleableKeyBindingMixin(
+	public ToggleKeyMappingMixin(
 		String p_i45001_1_,
 		int p_i45001_2_,
 		String p_i45001_3_

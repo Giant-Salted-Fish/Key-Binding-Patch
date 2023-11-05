@@ -1,34 +1,33 @@
 package gsf.kbp.client.api;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.platform.InputConstants.Key;
+import com.mojang.blaze3d.platform.InputConstants.Type;
 import gsf.kbp.client.IKeyBinding;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.client.util.InputMappings;
-import net.minecraft.client.util.InputMappings.Input;
-import net.minecraft.client.util.InputMappings.Type;
+import net.minecraft.client.KeyMapping;
+import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyConflictContext;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Do not cast vanilla {@link KeyBinding} instance to this class! you will get a
+ * Do not cast vanilla {@link KeyMapping} instance to this class! you will get a
  * bad cast exception if you did try. Cast it to {@link IPatchedKeyBinding} if
  * you do need to use the patched functionalities on vanilla key bindings. This
  * class only exists to make the creation of key binding with default
  * combinations more convenient.
  */
-public class PatchedKeyBinding extends KeyBinding implements IPatchedKeyBinding
+public class PatchedKeyBinding extends KeyMapping implements IPatchedKeyBinding
 {
 	public PatchedKeyBinding(
 		String description,
 		IKeyConflictContext key_conflict_context,
-		Input key,
-		Set< Input > combinations,
+		Key key,
+		Set< Key > combinations,
 		String category
 	) {
 		super( description, key_conflict_context, key, category );
@@ -43,9 +42,9 @@ public class PatchedKeyBinding extends KeyBinding implements IPatchedKeyBinding
 		
 		protected String category = "key.categories.gameplay";
 		
-		protected Input key = InputMappings.UNKNOWN;
+		protected Key key = InputConstants.UNKNOWN;
 		
-		protected Set< Input > combinations = Collections.emptySet();
+		protected Set< Key > combinations = Collections.emptySet();
 		
 		protected IKeyConflictContext conflict_context = KeyConflictContext.IN_GAME;
 		
@@ -59,7 +58,7 @@ public class PatchedKeyBinding extends KeyBinding implements IPatchedKeyBinding
 			return this;
 		}
 		
-		public Builder withKey( Input key )
+		public Builder withKey( Key key )
 		{
 			this.key = key;
 			return this;
@@ -77,7 +76,7 @@ public class PatchedKeyBinding extends KeyBinding implements IPatchedKeyBinding
 			return this;
 		}
 		
-		public Builder withCombinations( Input... combinations )
+		public Builder withCombinations( Key... combinations )
 		{
 			this.combinations = new HashSet<>( Arrays.asList( combinations ) );
 			return this;
@@ -88,7 +87,7 @@ public class PatchedKeyBinding extends KeyBinding implements IPatchedKeyBinding
 			this.combinations = new HashSet<>();
 			for ( int code : combinations )
 			{
-				final Input input = Type.KEYSYM.getOrCreate( code );
+				final Key input = Type.KEYSYM.getOrCreate( code );
 				this.combinations.add( input );
 			}
 			return this;
