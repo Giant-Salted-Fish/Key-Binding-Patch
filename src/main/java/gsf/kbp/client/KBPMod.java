@@ -14,7 +14,7 @@ public final class KBPMod
 		// cause the client to display the server as incompatible.
 		ModLoadingContext.get().registerExtensionPoint(
 			ExtensionPoint.DISPLAYTEST,
-			()->Pair.of(
+			() -> Pair.of(
 				() -> "This is a client only mod.",
 				( remote_version_string, network_bool ) -> network_bool
 			)
