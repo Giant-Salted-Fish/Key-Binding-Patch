@@ -1,6 +1,6 @@
 {
 	"required": true,
-	"package": "gsf.kbp.client.mixin",
+	"package": "com.kbp.client.mixin",
 	"minVersion": "0.8",
 	"refmap": "mixins.kbp.refmap.json",
 	"mixins": [],

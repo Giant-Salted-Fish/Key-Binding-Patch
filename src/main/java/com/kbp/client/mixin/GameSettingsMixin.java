@@ -1,6 +1,6 @@
-package gsf.kbp.client.mixin;
+package com.kbp.client.mixin;
 
-import gsf.kbp.client.IKeyBinding;
+import com.kbp.client.IKeyBinding;
 import net.minecraft.client.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
@@ -15,11 +15,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
 
 @Mixin( GameSettings.class )
-public abstract class GameSettingsMixin
+public class GameSettingsMixin
 {
 	@Shadow
 	public KeyBinding[] keyMappings;
@@ -27,6 +28,7 @@ public abstract class GameSettingsMixin
 	@Final
 	@Shadow
 	private File optionsFile;
+	
 	
 	@Inject( method = "load", at = @At( "HEAD" ) )
 	public void onLoad( CallbackInfo ci )
@@ -53,35 +55,30 @@ public abstract class GameSettingsMixin
 		CompoundNBT compoundnbt1
 	) {
 		// Build a hashmap to speedup key binding lookup.
-		final HashMap< String, IKeyBinding >
-			lookup_table = new HashMap<>();
-		for ( KeyBinding kb : this.keyMappings ) {
-			lookup_table.put( "key_" + kb.getName(), ( IKeyBinding ) kb );
-		}
+		final HashMap< String, IKeyBinding > lookup_table = new HashMap<>();
+		Arrays.stream( this.keyMappings ).forEach( kb -> lookup_table.put( "key_" + kb.getName(), ( IKeyBinding ) kb ) );
 		
-		for ( String key : compoundnbt1.getAllKeys() )
-		{
-			lookup_table.computeIfPresent( key, ( k, kb ) -> {
-				// This part is bit of hacky. See KeyBindingMixin#saveString().
-				final String value = compoundnbt1.getString( k );
-				final String[] splits = value.split( ":" );
-				if ( splits.length < 3 ) {
-					return kb;
-				}
-				
-				final String combinations = splits[ 2 ];
-				if ( combinations.isEmpty() ) {
-					return kb;
-				}
-				
-				final HashSet< Input > cmbs = new HashSet<>();
-				for ( String s : combinations.split( "\\+" ) ) {
-					cmbs.add( InputMappings.getKey( s ) );
-				}
-				
-				kb.setKeyAndCombinations( kb._cast().getKey(), cmbs );
-				return kb;
-			} );
-		}
+		compoundnbt1.getAllKeys().stream()
+		.filter( lookup_table::containsKey )
+		.forEach( k -> {
+			// This part is a little hacky. See KeyBindingMixin#saveString().
+			final String save_data = compoundnbt1.getString( k );
+			final String[] splits = save_data.split( ":" );
+			if ( splits.length < 3 ) {
+				return;
+			}
+			
+			final String cmb_keys_data = splits[ 2 ];
+			if ( cmb_keys_data.isEmpty() ) {
+				return;
+			}
+			
+			final IKeyBinding kb = lookup_table.get( k );
+			final Iterator< Input > cmb_keys = Arrays
+				.stream( cmb_keys_data.split( "\\+" ) )
+				.map( InputMappings::getKey )
+				.iterator();
+			kb.setKeyAndCmbKeys( kb.getKey(), cmb_keys );
+		} );
 	}
 }
