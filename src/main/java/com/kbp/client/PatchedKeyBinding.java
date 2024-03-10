@@ -30,11 +30,6 @@ public class PatchedKeyBinding extends KeyBinding implements IPatchedKeyBinding
 	}
 	
 	@Override
-	public void setToDefault() {
-		super.setToDefault();
-	}
-	
-	@Override
 	public KeyBinding getKeyBinding() {
 		return super.getKeyBinding();
 	}

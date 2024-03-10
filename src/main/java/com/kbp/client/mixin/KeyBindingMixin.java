@@ -37,7 +37,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Mixin( KeyBinding.class )
-public abstract class KeyBindingMixin implements IForgeKeybinding, IKeyBinding
+public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 {
 	// >>> Shadow fields and methods <<<
 	@Shadow

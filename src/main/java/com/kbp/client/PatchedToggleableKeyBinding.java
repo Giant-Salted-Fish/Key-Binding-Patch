@@ -31,11 +31,6 @@ public class PatchedToggleableKeyBinding extends ToggleableKeyBinding implements
 	}
 	
 	@Override
-	public void setToDefault() {
-		super.setToDefault();
-	}
-	
-	@Override
 	public KeyBinding getKeyBinding() {
 		return super.getKeyBinding();
 	}
