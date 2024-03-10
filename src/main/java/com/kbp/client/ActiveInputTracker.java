@@ -33,7 +33,12 @@ public final class ActiveInputTracker
 		return this.active_inputs.isEmpty() ? InputMappings.UNKNOWN : this.active_inputs.getFirst();
 	}
 	
-	public Iterator< Input > getCmbKeys() {
-		return this.active_inputs.isEmpty() ? Collections.emptyIterator() : this.active_inputs.stream().skip( 1 ).iterator();
+	public Iterator< Input > getCmbKeys()
+	{
+		return (
+			this.active_inputs.isEmpty()
+			? Collections.emptyIterator()
+			: this.active_inputs.stream().skip( 1 ).iterator()
+		);
 	}
 }
