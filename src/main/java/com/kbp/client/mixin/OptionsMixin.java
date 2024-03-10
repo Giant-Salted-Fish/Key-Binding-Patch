@@ -1,8 +1,8 @@
-package gsf.kbp.client.mixin;
+package com.kbp.client.mixin;
 
+import com.kbp.client.IKeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
-import gsf.kbp.client.IKeyBinding;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Options;
 import org.spongepowered.asm.mixin.Final;
@@ -16,14 +16,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.io.File;
-import java.util.HashSet;
+import java.util.Arrays;
+import java.util.Iterator;
 
 @Mixin( Options.class )
 public abstract class OptionsMixin
 {
-	@Final
 	@Shadow
+	@Final
 	private File optionsFile;
+	
 	
 	@Inject( method = "load", at = @At( "HEAD" ) )
 	public void onLoad( CallbackInfo ci )
@@ -59,18 +61,17 @@ public abstract class OptionsMixin
 		if ( splits.length < 3 ) {
 			return;
 		}
-
-		final String combinations = splits[ 2 ];
-		if ( combinations.isEmpty() ) {
+		
+		final String cmb_keys_data = splits[ 2 ];
+		if ( cmb_keys_data.isEmpty() ) {
 			return;
 		}
-
-		final HashSet< Key > cmbs = new HashSet<>();
-		for ( String ks : combinations.split( "\\+" ) ) {
-			cmbs.add( InputConstants.getKey( ks ) );
-		}
-
-		final IKeyBinding kb = ( IKeyBinding ) keymapping;
-		kb.setKeyAndCombinations( kb._cast().getKey(), cmbs );
+		
+		final IKeyMapping km = ( IKeyMapping ) keymapping;
+		final Iterator< Key > cmb_keys = Arrays
+			.stream( cmb_keys_data.split( "\\+" ) )
+			.map( InputConstants::getKey )
+			.iterator();
+		km.setKeyAndCmbKeys( km.getKeyMapping().getKey(), cmb_keys );
 	}
 }

@@ -1,8 +1,9 @@
-package gsf.kbp.client.mixin;
+package com.kbp.client.mixin;
 
+import com.kbp.client.ActiveKeyTracker;
+import com.kbp.client.IKeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
-import gsf.kbp.client.api.IPatchedKeyBinding;
 import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Options;
@@ -14,8 +15,6 @@ import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-
-import java.util.HashSet;
 
 @Mixin( KeyBindsScreen.class )
 public abstract class KeyBindsScreenMixin extends OptionsSubScreen
@@ -33,16 +32,15 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 	private KeyMapping shadow_selected_key;
 	
 	@Unique
-	private Key last_active_key = InputConstants.UNKNOWN;
+	private final ActiveKeyTracker key_tracker = new ActiveKeyTracker();
 	
-	@Unique
-	private final HashSet< Key > combinations = new HashSet<>();
 	
 	public KeyBindsScreenMixin(
 		Screen parent,
 		Options settings,
 		Component title
 	) { super( parent, settings, title ); }
+	
 	
 	@Override
 	public boolean keyPressed( int key, int scan_code, int modifier )
@@ -51,19 +49,21 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 			return super.keyPressed( key, scan_code, modifier );
 		}
 		
-		// Copy reference so that we can use it on key release.
-		// See KeyboardListener#keyPress(...).
-		this.shadow_selected_key = this.selectedKey;
 		if ( key == GLFW.GLFW_KEY_ESCAPE )
 		{
-			this.last_active_key = InputConstants.UNKNOWN;
-			this.combinations.clear();
-			this.__applyKeyAndCombinations();
+			this.key_tracker.resetTracking();
+			this.__updateSelectedKeyBinding();
+			this.shadow_selected_key = null;
+			this.selectedKey = null;
 		}
 		else
 		{
-			final Key input = InputConstants.getKey( key, scan_code );
-			this.__appendActiveInput( input );
+			// Copy reference so that we can use it on key release.
+			// See KeyboardListener#keyPress(...).
+			this.shadow_selected_key = this.selectedKey;
+			
+			final Key active_key = InputConstants.getKey( key, scan_code );
+			this.key_tracker.addActive( active_key );
 		}
 		
 		this.lastKeySelection = Util.getMillis();
@@ -77,7 +77,9 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 			return super.keyReleased( key, scan_code, modifier );
 		}
 		
-		this.__applyKeyAndCombinations();
+		this.__updateSelectedKeyBinding();
+		this.key_tracker.resetTracking();
+		this.shadow_selected_key = null;
 		return true;
 	}
 	
@@ -89,52 +91,33 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 		}
 		
 		this.shadow_selected_key = this.selectedKey;
-		final Key input = InputConstants.Type.MOUSE.getOrCreate( button );
-		this.__appendActiveInput( input );
+		final Key key = InputConstants.Type.MOUSE.getOrCreate( button );
+		this.key_tracker.addActive( key );
 		return true;
 	}
 	
 	@Override
 	public boolean mouseReleased( double x, double y, int button )
 	{
-		if (
-			this.selectedKey == null
-			|| this.last_active_key == InputConstants.UNKNOWN
-		) {
+		final boolean is_select_click_release = this.key_tracker.noKeyActive();
+		if ( this.selectedKey == null || is_select_click_release ) {
 			return super.mouseReleased( x, y, button );
 		}
 		
-		this.__applyKeyAndCombinations();
+		this.__updateSelectedKeyBinding();
+		this.key_tracker.resetTracking();
+		this.shadow_selected_key = null;
+		this.selectedKey = null;
 		return true;
 	}
 	
 	@Unique
-	private void __appendActiveInput( Key input )
+	private void __updateSelectedKeyBinding()
 	{
-		// Skip if is repeated keys.
-		if ( input.equals( this.last_active_key ) ) {
-			return;
-		}
-		
-		if ( this.last_active_key != InputConstants.UNKNOWN ) {
-			this.combinations.add( this.last_active_key );
-		}
-		this.last_active_key = input;
-	}
-	
-	@Unique
-	private void __applyKeyAndCombinations()
-	{
-		final IPatchedKeyBinding kb = ( IPatchedKeyBinding ) this.shadow_selected_key;
-		final HashSet< Key > combinations = new HashSet<>( this.combinations );
-		kb.setKeyAndCombinations( this.last_active_key, combinations );
-		
-		this.options.setKey( this.shadow_selected_key, this.last_active_key );
+		final IKeyMapping km = ( IKeyMapping ) this.shadow_selected_key;
+		final Key key = this.key_tracker.getKey();
+		km.setKeyAndCmbKeys( key, this.key_tracker.getCmbKeys() );
+		this.options.setKey( this.shadow_selected_key, key );
 		KeyMapping.resetMapping();
-		
-		this.last_active_key = InputConstants.UNKNOWN;
-		this.combinations.clear();
-		this.selectedKey = null;
-		this.shadow_selected_key = null;
 	}
 }

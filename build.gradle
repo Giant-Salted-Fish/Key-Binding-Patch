@@ -10,8 +10,8 @@ apply plugin: 'maven-publish'
 apply plugin: 'org.spongepowered.mixin'
 
 
-version = '1.18.2-1.0.2.5'
-group = 'gsf.kbp'  // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+version = '1.18.2-1.1.0.0'
+group = 'com.kbp'  // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'Key Binding Patch'
 
 // Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
@@ -72,9 +72,11 @@ minecraft {
 
 		server {
 			workingDirectory project.file('run')
+
 			property 'forge.logging.markers', 'REGISTRIES'
 			property 'forge.logging.console.level', 'debug'
 			property 'forge.enabledGameTestNamespaces', 'key_binding_patch'
+
 			mods {
 				key_binding_patch {
 					source sourceSets.main
@@ -87,9 +89,11 @@ minecraft {
 		// The gametest system is also enabled by default for other run configs under the /test command.
 		gameTestServer {
 			workingDirectory project.file('run')
+
 			property 'forge.logging.markers', 'REGISTRIES'
 			property 'forge.logging.console.level', 'debug'
 			property 'forge.enabledGameTestNamespaces', 'key_binding_patch'
+
 			mods {
 				key_binding_patch {
 					source sourceSets.main
@@ -99,6 +103,7 @@ minecraft {
 
 		data {
 			workingDirectory project.file('run')
+
 			property 'forge.logging.markers', 'REGISTRIES'
 			property 'forge.logging.console.level', 'debug'
 
