@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 @OnlyIn( Dist.CLIENT )
-public final class ActiveInputBindingTracker
+public final class ActiveInputTracker
 {
 	private final LinkedList< Input > active_inputs = new LinkedList<>();
 	

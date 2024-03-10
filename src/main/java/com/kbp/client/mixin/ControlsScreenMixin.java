@@ -1,6 +1,6 @@
 package com.kbp.client.mixin;
 
-import com.kbp.client.ActiveInputBindingTracker;
+import com.kbp.client.ActiveInputTracker;
 import com.kbp.client.IKeyBinding;
 import net.minecraft.client.GameSettings;
 import net.minecraft.client.gui.screen.ControlsScreen;
@@ -33,7 +33,7 @@ public abstract class ControlsScreenMixin extends SettingsScreen
 	private KeyBinding shadow_selected_key;
 	
 	@Unique
-	private final ActiveInputBindingTracker input_tracker = new ActiveInputBindingTracker();
+	private final ActiveInputTracker input_tracker = new ActiveInputTracker();
 	
 	
 	public ControlsScreenMixin(
@@ -100,8 +100,8 @@ public abstract class ControlsScreenMixin extends SettingsScreen
 	@Override
 	public boolean mouseReleased( double x, double y, int button )
 	{
-		final boolean is_first_click_release = this.input_tracker.noInputActive();
-		if ( this.selectedKey == null || is_first_click_release ) {
+		final boolean is_select_click_release = this.input_tracker.noInputActive();
+		if ( this.selectedKey == null || is_select_click_release ) {
 			return super.mouseReleased( x, y, button );
 		}
 		
@@ -115,9 +115,9 @@ public abstract class ControlsScreenMixin extends SettingsScreen
 	@Unique
 	private void __updateSelectedKeyBinding()
 	{
-		final IKeyBinding ikb = ( IKeyBinding ) this.shadow_selected_key;
+		final IKeyBinding kb = ( IKeyBinding ) this.shadow_selected_key;
 		final Input key = this.input_tracker.getKey();
-		ikb.setKeyAndCmbKeys( key, this.input_tracker.getCmbKeys() );
+		kb.setKeyAndCmbKeys( key, this.input_tracker.getCmbKeys() );
 		this.options.setKey( this.shadow_selected_key, key );
 		KeyBinding.resetMapping();
 	}

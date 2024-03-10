@@ -25,8 +25,8 @@ public class GameSettingsMixin
 	@Shadow
 	public KeyBinding[] keyMappings;
 	
-	@Final
 	@Shadow
+	@Final
 	private File optionsFile;
 	
 	
@@ -78,7 +78,7 @@ public class GameSettingsMixin
 				.stream( cmb_keys_data.split( "\\+" ) )
 				.map( InputMappings::getKey )
 				.iterator();
-			kb.setKeyAndCmbKeys( kb.getKey(), cmb_keys );
+			kb.setKeyAndCmbKeys( kb.getKeyBinding().getKey(), cmb_keys );
 		} );
 	}
 }

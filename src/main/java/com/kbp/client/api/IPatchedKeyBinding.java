@@ -17,11 +17,11 @@ import java.util.function.BooleanSupplier;
 @OnlyIn( Dist.CLIENT )
 public interface IPatchedKeyBinding
 {
-	default Set< Input > defaultCmbKeys() {
+	default Set< Input > getDefaultCmbKeys() {
 		throw new UnsupportedOperationException();
 	}
 	
-	default Set< Input > currentCmbKeys() {
+	default Set< Input > getCmbKeys() {
 		throw new UnsupportedOperationException();
 	}
 	
@@ -45,23 +45,5 @@ public interface IPatchedKeyBinding
 		throw new UnsupportedOperationException();
 	}
 	
-	Input getDefaultKey();
-	
-	Input getKey();
-	
-	boolean isDefault();
-	
-	void setToDefault();
-	
-	boolean isDown();
-	
-	void setDown( boolean down );
-	
-	boolean consumeClick();
-	
-	/**
-	 * In most cases you should directly use methods in this interface rather
-	 * than ones with similar functionalities in {@link KeyBinding}.
-	 */
 	KeyBinding getKeyBinding();
 }

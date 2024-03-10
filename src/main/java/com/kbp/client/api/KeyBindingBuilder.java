@@ -1,6 +1,5 @@
 package com.kbp.client.api;
 
-
 import com.google.common.collect.Iterators;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.client.util.InputMappings.Input;

@@ -90,7 +90,7 @@ public final class KBPMod
 					}
 				};
 				tkb.setKeyConflictContext( this.conflict_context );
-				return ( IKeyBinding ) tkb.getKeyBinding();
+				return tkb;
 			}
 		};
 	}

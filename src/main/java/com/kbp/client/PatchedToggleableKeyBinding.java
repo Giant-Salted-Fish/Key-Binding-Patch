@@ -10,6 +10,10 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import java.util.Iterator;
 import java.util.function.BooleanSupplier;
 
+/**
+ * Use {@link KBPMod#newToggleableBuilder(String, BooleanSupplier)} if possible
+ * as this implementation is not guaranteed to present in all version.
+ */
 @OnlyIn( Dist.CLIENT )
 public class PatchedToggleableKeyBinding extends ToggleableKeyBinding implements IPatchedKeyBinding
 {
