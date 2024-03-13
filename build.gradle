@@ -9,7 +9,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'maven-publish'
 apply plugin: 'org.spongepowered.mixin'
 
-version = "1.16.5-1.1.0.0"
+version = "1.16.5-1.2.0.0"
 group = "com.kbp"  // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "Key Binding Patch"
 

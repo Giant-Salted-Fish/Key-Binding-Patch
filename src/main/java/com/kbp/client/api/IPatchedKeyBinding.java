@@ -1,12 +1,12 @@
 package com.kbp.client.api;
 
+import com.google.common.collect.ImmutableSet;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings.Input;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.Iterator;
-import java.util.Set;
 import java.util.function.BooleanSupplier;
 
 /**
@@ -17,11 +17,11 @@ import java.util.function.BooleanSupplier;
 @OnlyIn( Dist.CLIENT )
 public interface IPatchedKeyBinding
 {
-	default Set< Input > getDefaultCmbKeys() {
+	default ImmutableSet< Input > getDefaultCmbKeys() {
 		throw new UnsupportedOperationException();
 	}
 	
-	default Set< Input > getCmbKeys() {
+	default ImmutableSet< Input > getCmbKeys() {
 		throw new UnsupportedOperationException();
 	}
 	
