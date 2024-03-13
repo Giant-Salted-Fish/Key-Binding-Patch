@@ -91,8 +91,10 @@ public abstract class GuiControlsMixin extends GuiScreen
 	protected void mouseReleased( int mouseX, int mouseY, int state )
 	{
 		final boolean is_select_click_release = this.key_tracker.noTrackingKey();
-		if ( this.buttonId != null && !is_select_click_release ) {
+		if ( this.buttonId != null && !is_select_click_release )
+		{
 			this.__updateSelectedKeyBinding();
+			this.key_tracker.resetTracking();
 		}
 		else if ( state != 0 || !this.keyBindingList.mouseReleased( mouseX, mouseY, state ) ) {
 			super.mouseReleased( mouseX, mouseY, state );
