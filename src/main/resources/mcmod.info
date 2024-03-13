@@ -1,0 +1,9 @@
+[ {
+	"modid": "key_binding_patch",
+	"name": "Key Binding Patch",
+	"description": "Patches the vanilla Key binding system to support better key combinations and resolve conflicts.",
+	"url": "https://www.mcmod.cn/class/12624.html",
+	"logoFile": "logo.png",
+	"authorList": [ "Giant_Salted_Fish" ],
+	"credits": "All code contributors."
+} ]

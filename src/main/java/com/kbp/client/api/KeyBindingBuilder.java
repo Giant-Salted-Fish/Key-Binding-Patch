@@ -1,25 +1,22 @@
 package com.kbp.client.api;
 
-import com.google.common.collect.Iterators;
-import net.minecraft.client.util.InputMappings;
-import net.minecraft.client.util.InputMappings.Input;
-import net.minecraft.client.util.InputMappings.Type;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.input.Keyboard;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 
-@OnlyIn( Dist.CLIENT )
+@SideOnly( Side.CLIENT )
 public abstract class KeyBindingBuilder
 {
 	protected String category = "key.categories.gameplay";
-	protected Input key = InputMappings.UNKNOWN;
-	protected Iterator< Input > cmb_keys = Collections.emptyIterator();
+	protected int key = Keyboard.KEY_NONE;
+	protected Iterator< Integer > cmb_keys = Collections.emptyIterator();
 	protected IKeyConflictContext conflict_context = KeyConflictContext.IN_GAME;
 	
 	public KeyBindingBuilder() { }
@@ -30,34 +27,21 @@ public abstract class KeyBindingBuilder
 		return this;
 	}
 	
-	public KeyBindingBuilder withKey( Input key )
+	public KeyBindingBuilder withKey( int key )
 	{
 		this.key = key;
 		return this;
 	}
 	
-	public KeyBindingBuilder withKeyboardKey( int key_code )
-	{
-		this.key = Type.KEYSYM.getOrCreate( key_code );
-		return this;
-	}
-	
 	public KeyBindingBuilder withMouseButton( int button )
 	{
-		this.key = Type.MOUSE.getOrCreate( button );
+		this.key = button - 100;
 		return this;
 	}
 	
-	public KeyBindingBuilder withCmbKeys( Input... cmb_keys )
+	public KeyBindingBuilder withCmbKeys( int... cmb_keys )
 	{
-		this.cmb_keys = Iterators.forArray( cmb_keys );
-		return this;
-	}
-	
-	public KeyBindingBuilder withKeyboardCmbKeys( int... cmb_keys )
-	{
-		this.cmb_keys = Arrays.stream( cmb_keys )
-			.mapToObj( Type.KEYSYM::getOrCreate ).iterator();
+		this.cmb_keys = Arrays.stream( cmb_keys ).iterator();
 		return this;
 	}
 	

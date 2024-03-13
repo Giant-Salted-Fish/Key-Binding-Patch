@@ -2,30 +2,27 @@ package com.kbp.client.api;
 
 import com.google.common.collect.ImmutableSet;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.client.util.InputMappings.Input;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.Iterator;
-import java.util.function.BooleanSupplier;
 
 /**
  * @see com.kbp.client.KBPMod#getPatched(KeyBinding)
  * @see com.kbp.client.KBPMod#newBuilder(String)
- * @see com.kbp.client.KBPMod#newToggleableBuilder(String, BooleanSupplier)
  */
-@OnlyIn( Dist.CLIENT )
+@SideOnly( Side.CLIENT )
 public interface IPatchedKeyBinding
 {
-	default ImmutableSet< Input > getDefaultCmbKeys() {
+	default ImmutableSet< Integer > getDefaultCmbKeys() {
 		throw new UnsupportedOperationException();
 	}
 	
-	default ImmutableSet< Input > getCmbKeys() {
+	default ImmutableSet< Integer > getCmbKeys() {
 		throw new UnsupportedOperationException();
 	}
 	
-	default void setKeyAndCmbKeys( Input key, Iterator< Input > cmb_keys ) {
+	default void setKeyAndCmbKeys( int key, Iterator< Integer > cmb_keys ) {
 		throw new UnsupportedOperationException();
 	}
 	
@@ -45,5 +42,15 @@ public interface IPatchedKeyBinding
 		throw new UnsupportedOperationException();
 	}
 	
-	KeyBinding getKeyBinding();
+	default void pressKey() {
+		throw new UnsupportedOperationException();
+	}
+	
+	default void releaseKey() {
+		throw new UnsupportedOperationException();
+	}
+	
+	default KeyBinding getKeyBinding() {
+		throw new UnsupportedOperationException();
+	}
 }
