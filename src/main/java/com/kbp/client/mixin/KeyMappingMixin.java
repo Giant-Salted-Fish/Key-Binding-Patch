@@ -1,7 +1,6 @@
 package com.kbp.client.mixin;
 
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import com.kbp.client.IKeyMapping;
 import com.kbp.client.api.IPatchedKeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -13,6 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.client.extensions.IForgeKeyMapping;
 import net.minecraftforge.client.settings.IKeyConflictContext;
+import net.minecraftforge.client.settings.KeyBindingMap;
 import net.minecraftforge.client.settings.KeyModifier;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,9 +32,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Mixin( KeyMapping.class )
@@ -44,15 +43,9 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	@Final
 	private static Map< String, KeyMapping > ALL;
 	
-//	@Shadow
-//	@Final
-//	private static KeyBindingMap MAP;
-//	static
-//	{
-//		// No longer use it, so clear it.
-//		// TODO: Fix this, this seems to have no effect.
-//		MAP.clearMap();
-//	}
+	@Shadow
+	@Final
+	private static KeyBindingMap MAP;
 	
 	@Shadow
 	boolean isDown;
@@ -75,16 +68,16 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	
 	// >>> Unique fields <<<
 	@Unique
-	private static final HashMap< KeyModifier, Supplier< Iterator< Key > > >
-		MODIFIER_2_CMBS = new HashMap<>();
+	private static final HashMap< KeyModifier, ImmutableSet< Key > >
+		MODIFIER_2_CMB_KEYS = new HashMap<>();
 	static
 	{
 		final BiConsumer< KeyModifier, Integer > adder = ( modifier, key_code ) ->
-			MODIFIER_2_CMBS.put( modifier, () -> Iterators.forArray( Type.KEYSYM.getOrCreate( key_code ) ) );
+			MODIFIER_2_CMB_KEYS.put( modifier, ImmutableSet.of( Type.KEYSYM.getOrCreate( key_code ) ) );
 		adder.accept( KeyModifier.CONTROL, GLFW.GLFW_KEY_LEFT_CONTROL );
 		adder.accept( KeyModifier.SHIFT, GLFW.GLFW_KEY_LEFT_SHIFT );
 		adder.accept( KeyModifier.ALT, GLFW.GLFW_KEY_LEFT_ALT );
-		MODIFIER_2_CMBS.put( KeyModifier.NONE, Collections::emptyIterator );
+		MODIFIER_2_CMB_KEYS.put( KeyModifier.NONE, ImmutableSet.of() );
 	}
 	
 	@Unique
@@ -95,10 +88,10 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	
 	
 	@Unique
-	private Set< Key > default_cmb_keys = Collections.emptySet();
+	private ImmutableSet< Key > default_cmb_keys = ImmutableSet.of();
 	
 	@Unique
-	private Set< Key > current_cmb_keys = this.getDefaultCmbKeys();
+	private ImmutableSet< Key > current_cmb_keys = this.getDefaultCmbKeys();
 	
 	@Unique
 	private final HashSet< Runnable > press_callbacks = new HashSet<>();
@@ -143,7 +136,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 		while ( itr.hasNext() )
 		{
 			final IKeyMapping km = itr.next();
-			final Set< Key > cmb_keys = km.getCmbKeys();
+			final ImmutableSet< Key > cmb_keys = km.getCmbKeys();
 			if ( !ACTIVE_KEYS.containsAll( cmb_keys ) ) {
 				continue;
 			}
@@ -153,7 +146,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 			while ( itr.hasNext() )
 			{
 				final IKeyMapping after_km = itr.next();
-				final Set< Key > after_cmb_keys = after_km.getCmbKeys();
+				final ImmutableSet< Key > after_cmb_keys = after_km.getCmbKeys();
 				final int after_priority = after_cmb_keys.size();
 				if ( after_priority != priority ) {
 					break;
@@ -204,30 +197,31 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	@Overwrite
 	public static void resetMapping()
 	{
+		MAP.clearMap();
 		UPDATE_TABLE.clear();
 		ALL.values().stream()
 			.filter( km -> km.getKey() != InputConstants.UNKNOWN )
-			.map( km -> ( IKeyMapping ) km )
 			.forEach( KeyMappingMixin::__regisToUpdateTable );
 	}
 	
-	private static void __regisToUpdateTable( IKeyMapping km )
+	private static void __regisToUpdateTable( KeyMapping km )
 	{
-		UPDATE_TABLE.compute( km.getKeyMapping().getKey(), ( k, lst ) -> {
+		final IKeyMapping ikm = ( IKeyMapping ) km;
+		UPDATE_TABLE.compute( km.getKey(), ( k, lst ) -> {
 			if ( lst == null ) {
 				lst = new ArrayList<>();
 			}
 			
 			final List< Integer > priority_lst = lst.stream()
 				.map( IPatchedKeyMapping::getCmbKeys )
-				.map( Set::size )
+				.map( AbstractCollection::size )
 				.collect( Collectors.toList() );
 			Collections.reverse( priority_lst );
 			
-			final int priority = km.getCmbKeys().size();
+			final int priority = ikm.getCmbKeys().size();
 			final int idx = Collections.binarySearch( priority_lst, priority );
 			final int insert_idx = lst.size() - ( idx < 0 ? -idx - 1 : idx );
-			lst.add( insert_idx, km );
+			lst.add( insert_idx, ikm );
 			return lst;
 		} );
 	}
@@ -245,7 +239,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 		String category,
 		CallbackInfo info
 	) {
-		this.setDefaultCmbKeys( MODIFIER_2_CMBS.get( keyModifier ).get() );
+		this.setDefaultCmbKeys( MODIFIER_2_CMB_KEYS.get( keyModifier ).iterator() );
 		this.setKeyAndCmbKeys( keyCode, this.getDefaultCmbKeys().iterator() );
 		
 		// Modifier will be ignored in the rest of the part.
@@ -277,8 +271,8 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 		}
 		
 		final IPatchedKeyMapping other_ = ( IPatchedKeyMapping ) other;
-		final Set< Key > cmb0 = this.getCmbKeys();
-		final Set< Key > cmb1 = other_.getCmbKeys();
+		final ImmutableSet< Key > cmb0 = this.getCmbKeys();
+		final ImmutableSet< Key > cmb1 = other_.getCmbKeys();
 		final Key key0 = this.getKey();
 		final Key key1 = other.getKey();
 		return (
@@ -363,13 +357,9 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 		}
 	}
 	
-	/**
-	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
-	 */
-	@Overwrite( remap = false )
+	@Override
 	public void setKeyModifierAndCode( KeyModifier keyModifier, Key keyCode ) {
-		this.setKeyAndCmbKeys( keyCode, MODIFIER_2_CMBS.get( keyModifier ).get() );
+		this.setKeyAndCmbKeys( keyCode, MODIFIER_2_CMB_KEYS.get( keyModifier ).iterator() );
 	}
 	
 	@Override
@@ -379,7 +369,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	
 	@Override
 	public final void setDefaultCmbKeys( Iterator< Key > cmb_keys ) {
-		this.default_cmb_keys = Sets.newHashSet( cmb_keys );
+		this.default_cmb_keys = ImmutableSet.copyOf( cmb_keys );
 	}
 	
 	@Override
@@ -388,20 +378,20 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	}
 	
 	@Override
-	public Set< Key > getDefaultCmbKeys() {
-		return Collections.unmodifiableSet( this.default_cmb_keys );
+	public ImmutableSet< Key > getDefaultCmbKeys() {
+		return this.default_cmb_keys;
 	}
 	
 	@Override
-	public Set< Key > getCmbKeys() {
-		return Collections.unmodifiableSet( this.current_cmb_keys );
+	public ImmutableSet< Key > getCmbKeys() {
+		return this.current_cmb_keys;
 	}
 	
 	@Override
 	public void setKeyAndCmbKeys( Key key, Iterator< Key > cmb_keys )
 	{
 		this.setKey( key );
-		this.current_cmb_keys = Sets.newHashSet( cmb_keys );
+		this.current_cmb_keys = ImmutableSet.copyOf( cmb_keys );
 	}
 	
 	@Override

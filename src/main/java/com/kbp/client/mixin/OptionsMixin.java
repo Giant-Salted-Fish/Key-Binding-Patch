@@ -43,6 +43,7 @@ public abstract class OptionsMixin
 		at = @At(
 			value = "INVOKE",
 			target = "Lnet/minecraft/client/KeyMapping;setKeyModifierAndCode(Lnet/minecraftforge/client/settings/KeyModifier;Lcom/mojang/blaze3d/platform/InputConstants$Key;)V",
+			remap = false,
 			shift = Shift.AFTER
 		),
 		locals = LocalCapture.CAPTURE_FAILHARD

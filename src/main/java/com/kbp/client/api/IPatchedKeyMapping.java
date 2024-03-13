@@ -1,5 +1,6 @@
 package com.kbp.client.api;
 
+import com.google.common.collect.ImmutableSet;
 import com.kbp.client.KBPMod;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.client.KeyMapping;
@@ -7,7 +8,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.Iterator;
-import java.util.Set;
 
 /**
  * @see KBPMod#getPatched(KeyMapping)
@@ -15,11 +15,11 @@ import java.util.Set;
 @OnlyIn( Dist.CLIENT )
 public interface IPatchedKeyMapping
 {
-	default Set< Key > getDefaultCmbKeys() {
+	default ImmutableSet< Key > getDefaultCmbKeys() {
 		throw new UnsupportedOperationException();
 	}
 	
-	default Set< Key > getCmbKeys() {
+	default ImmutableSet< Key > getCmbKeys() {
 		throw new UnsupportedOperationException();
 	}
 	
