@@ -26,8 +26,9 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 	public long lastKeySelection;
 	
 	
-	// It seems that the Forge will automatically set #selectedKey to null \
-	// when key is released, so we have to manually save its reference to use.
+	// It turns out that Forge will automatically set #selectedKey to null in
+	// certain circumstances when keyboard key is released, so we have to
+	// manually copy the reference to use.
 	@Unique
 	private KeyMapping shadow_selected_key;
 	
@@ -49,19 +50,17 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 			return super.keyPressed( key, scan_code, modifier );
 		}
 		
+		// Copy reference so that we can use it on key release.
+		// See KeyboardHandler#keyPress(...).
+		this.shadow_selected_key = this.selectedKey;
+		
 		if ( key == GLFW.GLFW_KEY_ESCAPE )
 		{
 			this.key_tracker.resetTracking();
 			this.__updateSelectedKeyBinding();
-			this.shadow_selected_key = null;
-			this.selectedKey = null;
 		}
 		else
 		{
-			// Copy reference so that we can use it on key release.
-			// See KeyboardListener#keyPress(...).
-			this.shadow_selected_key = this.selectedKey;
-			
 			final Key active_key = InputConstants.getKey( key, scan_code );
 			this.key_tracker.addActive( active_key );
 		}
@@ -79,7 +78,6 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 		
 		this.__updateSelectedKeyBinding();
 		this.key_tracker.resetTracking();
-		this.shadow_selected_key = null;
 		return true;
 	}
 	
@@ -100,14 +98,12 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 	public boolean mouseReleased( double x, double y, int button )
 	{
 		final boolean is_select_click_release = this.key_tracker.noKeyActive();
-		if ( this.selectedKey == null || is_select_click_release ) {
+		if ( this.shadow_selected_key == null || is_select_click_release ) {
 			return super.mouseReleased( x, y, button );
 		}
 		
 		this.__updateSelectedKeyBinding();
 		this.key_tracker.resetTracking();
-		this.shadow_selected_key = null;
-		this.selectedKey = null;
 		return true;
 	}
 	
@@ -118,6 +114,9 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 		final Key key = this.key_tracker.getKey();
 		km.setKeyAndCmbKeys( key, this.key_tracker.getCmbKeys() );
 		this.options.setKey( this.shadow_selected_key, key );
+		
+		this.shadow_selected_key = null;
+		this.selectedKey = null;
 		KeyMapping.resetMapping();
 	}
 }
