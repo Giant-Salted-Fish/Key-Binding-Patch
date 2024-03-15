@@ -172,21 +172,19 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 		final Minecraft mc = Minecraft.getInstance();
 		final long window_handle = mc.getWindow().getWindow();
 		ACTIVE_KEYS.removeIf( key -> {
-			final boolean not_keyboard_key = key.getType() != Type.KEYSYM;
-			return (
-				not_keyboard_key || key == InputConstants.UNKNOWN
-				|| !InputConstants.isKeyDown( window_handle, key.getValue() )
+			final boolean is_still_active = (
+				key.getType() != Type.KEYSYM // && key != InputConstants.UNKNOWN
+				&& InputConstants.isKeyDown( window_handle, key.getValue() )
 			);
-		} );
-		
-		UPDATE_TABLE.forEach( ( key, lst ) -> {
-			if ( !ACTIVE_KEYS.contains( key ) )
-			{
-				lst.stream()
-					.map( IPatchedKeyMapping::getKeyMapping )
-					.filter( KeyMapping::isDown )
-					.forEach( km -> km.setDown( false ) );
+			if ( is_still_active ) {
+				return false;
 			}
+			
+			UPDATE_TABLE.getOrDefault( key, Collections.emptyList() ).stream()
+				.map( IPatchedKeyMapping::getKeyMapping )
+				.filter( KeyMapping::isDown )
+				.forEach( km -> km.setDown( false ) );
+			return true;
 		} );
 	}
 	
