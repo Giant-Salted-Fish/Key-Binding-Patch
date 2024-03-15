@@ -172,21 +172,19 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 		final Minecraft mc = Minecraft.getInstance();
 		final long window_handle = mc.getWindow().getWindow();
 		ACTIVE_INPUTS.removeIf( input -> {
-			final boolean not_keyboard_key = input.getType() != Type.KEYSYM;
-			return (
-				not_keyboard_key || input == InputMappings.UNKNOWN
-				|| !InputMappings.isKeyDown( window_handle, input.getValue() )
+			final boolean is_still_active = (
+				input.getType() == Type.KEYSYM // && input != InputMappings.UNKNOWN
+				&& InputMappings.isKeyDown( window_handle, input.getValue() )
 			);
-		} );
-		
-		UPDATE_TABLE.forEach( ( key, lst ) -> {
-			if ( !ACTIVE_INPUTS.contains( key ) )
-			{
-				lst.stream()
-					.map( IPatchedKeyBinding::getKeyBinding )
-					.filter( KeyBinding::isDown )
-					.forEach( kb -> kb.setDown( false ) );
+			if ( is_still_active ) {
+				return false;
 			}
+			
+			UPDATE_TABLE.getOrDefault( input, Collections.emptyList() ).stream()
+				.map( IPatchedKeyBinding::getKeyBinding )
+				.filter( KeyBinding::isDown )
+				.forEach( kb -> kb.setDown( false ) );
+			return true;
 		} );
 	}
 	
