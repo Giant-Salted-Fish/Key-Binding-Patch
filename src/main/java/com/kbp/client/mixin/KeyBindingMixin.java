@@ -165,6 +165,26 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	 * @reason Patch logic.
 	 */
 	@Overwrite
+	public static void updateKeyBindState()
+	{
+		ACTIVE_KEYS.removeIf( key -> {
+			final boolean is_still_active = key > 0 && key < 256 && Keyboard.isKeyDown( key );
+			if ( is_still_active ) {
+				return false;
+			}
+			
+			UPDATE_TABLE.getOrDefault( key, Collections.emptyList() ).stream()
+				.filter( kb -> kb.getKeyBinding().isKeyDown() )
+				.forEach( IPatchedKeyBinding::releaseKey );
+			return true;
+		} );
+	}
+	
+	/**
+	 * @author Giant_Salted_Fish
+	 * @reason Patch logic.
+	 */
+	@Overwrite
 	public static void unPressAllKeys() {
 		KEYBIND_ARRAY.values().forEach( kb -> ( ( IKeyBinding ) kb ).releaseKey() );
 	}
