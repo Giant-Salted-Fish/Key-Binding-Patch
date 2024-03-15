@@ -106,6 +106,10 @@ mixin {
 //	dumpTargetOnFailure = true
 }
 
+javadoc {
+	exclude('**/mixin/**')
+}
+
 // Example for how to get properties into the manifest for reading by the runtime.
 jar {
 	manifest {
@@ -129,10 +133,25 @@ jar.finalizedBy('reobfJar')
 // However if you are in a multi-project build, dev time needs unobfed jar files, so you can delay the obfuscation until publishing by doing.
 //publish.dependsOn('reobfJar')
 
+// Add tasks to generate source and Javadoc JARs
+tasks.register('sourceJar', Jar) {
+	from sourceSets.main.allSource
+	archiveClassifier.set('sources')
+}
+
+tasks.register('javadocJar', Jar) {
+	dependsOn javadoc
+	from javadoc.destinationDir
+	archiveClassifier.set('javadoc')
+}
+
+// Include the source and Javadoc JARs in the publication
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
 			artifact jar
+			artifact sourceJar
+			artifact javadocJar
 		}
 	}
 	repositories {
