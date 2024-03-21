@@ -206,11 +206,8 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	{
 		final IKeyMapping ikm = ( IKeyMapping ) km;
 		UPDATE_TABLE.compute( km.getKey(), ( k, lst ) -> {
-			if ( lst == null ) {
-				lst = new ArrayList<>();
-			}
-			
-			final List< Integer > priority_lst = lst.stream()
+			final List< IKeyMapping > update_lst = lst != null ? lst : new ArrayList<>();
+			final List< Integer > priority_lst = update_lst.stream()
 				.map( IPatchedKeyMapping::getCmbKeys )
 				.map( AbstractCollection::size )
 				.collect( Collectors.toList() );
@@ -218,9 +215,9 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 			
 			final int priority = ikm.getCmbKeys().size();
 			final int idx = Collections.binarySearch( priority_lst, priority );
-			final int insert_idx = lst.size() - ( idx < 0 ? -idx - 1 : idx );
-			lst.add( insert_idx, ikm );
-			return lst;
+			final int insert_idx = update_lst.size() - ( idx < 0 ? -idx - 1 : idx );
+			update_lst.add( insert_idx, ikm );
+			return update_lst;
 		} );
 	}
 	
@@ -358,6 +355,33 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	@Override
 	public void setKeyModifierAndCode( KeyModifier keyModifier, Key keyCode ) {
 		this.setKeyAndCmbKeys( keyCode, MODIFIER_2_CMB_KEYS.get( keyModifier ).iterator() );
+	}
+	
+	@Override
+	public boolean isConflictContextAndModifierActive()
+	{
+		return (
+			this.getKeyConflictContext().isActive()
+			&& ACTIVE_KEYS.containsAll( this.getCmbKeys() )
+		);
+	}
+	
+	@Override
+	public boolean hasKeyModifierConflict( KeyMapping other )
+	{
+		final IKeyConflictContext ctx0 = this.getKeyConflictContext();
+		final IKeyConflictContext ctx1 = other.getKeyConflictContext();
+		final boolean is_ctx_conflict = ctx0.conflicts( ctx1 ) || ctx1.conflicts( ctx0 );
+		if ( !is_ctx_conflict ) {
+			return false;
+		}
+		
+		final IPatchedKeyMapping other_ = ( IPatchedKeyMapping ) other;
+		final ImmutableSet< Key > cmb0 = this.getCmbKeys();
+		final ImmutableSet< Key > cmb1 = other_.getCmbKeys();
+		final Key key0 = this.getKey();
+		final Key key1 = other.getKey();
+		return cmb0.contains( key1 ) || cmb1.contains( key0 );
 	}
 	
 	@Override

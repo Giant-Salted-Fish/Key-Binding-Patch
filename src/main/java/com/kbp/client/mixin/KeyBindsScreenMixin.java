@@ -36,12 +36,9 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 	private final ActiveKeyTracker key_tracker = new ActiveKeyTracker();
 	
 	
-	public KeyBindsScreenMixin(
-		Screen parent,
-		Options settings,
-		Component title
-	) { super( parent, settings, title ); }
-	
+	public KeyBindsScreenMixin( Screen parent, Options settings, Component title ) {
+		super( parent, settings, title );
+	}
 	
 	@Override
 	public boolean keyPressed( int key, int scan_code, int modifier )

@@ -16,13 +16,9 @@ public abstract class ToggleKeyMappingMixin extends KeyMapping
 	private BooleanSupplier needsToggle;
 	
 	
-	@Shadow public abstract boolean isDown();
-	
-	public ToggleKeyMappingMixin(
-		String p_i45001_1_,
-		int p_i45001_2_,
-		String p_i45001_3_
-	) { super( p_i45001_1_, p_i45001_2_, p_i45001_3_ ); }
+	public ToggleKeyMappingMixin( String p_90821_, int p_90822_, String p_90823_ ) {
+		super( p_90821_, p_90822_, p_90823_ );
+	}
 	
 	@Override
 	public void setDown( boolean is_down )

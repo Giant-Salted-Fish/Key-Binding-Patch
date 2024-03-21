@@ -28,7 +28,7 @@ public abstract class OptionsMixin
 	
 	
 	@Inject( method = "load", at = @At( "HEAD" ) )
-	public void onLoad( CallbackInfo ci )
+	private void onLoad( CallbackInfo ci )
 	{
 		if ( !this.optionsFile.exists() )
 		{
@@ -48,7 +48,7 @@ public abstract class OptionsMixin
 		),
 		locals = LocalCapture.CAPTURE_FAILHARD
 	)
-	public void onProcessOptions(
+	private void onProcessOptions(
 		@Coerce Object p_168428_,
 		CallbackInfo ci, KeyMapping[] var2,
 		int var3,
@@ -57,7 +57,7 @@ public abstract class OptionsMixin
 		String s,
 		String s1
 	) {
-		// This part is bit of hacky. See KeyBindingMixin#saveString().
+		// This part is bit of hacky. See KeyMappingMixin#saveString().
 		final String[] splits = s1.split( ":" );
 		if ( splits.length < 3 ) {
 			return;
