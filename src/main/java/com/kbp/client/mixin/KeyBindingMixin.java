@@ -207,11 +207,8 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	{
 		final IKeyBinding ikb = ( IKeyBinding ) kb;
 		UPDATE_TABLE.compute( kb.getKeyCode(), ( k, lst ) -> {
-			if ( lst == null ) {
-				lst = new ArrayList<>();
-			}
-			
-			final List< Integer > priority_lst = lst.stream()
+			final List< IKeyBinding > update_lst = lst != null ? lst : new ArrayList<>();
+			final List< Integer > priority_lst = update_lst.stream()
 				.map( IPatchedKeyBinding::getCmbKeys )
 				.map( AbstractCollection::size )
 				.collect( Collectors.toList() );
@@ -219,9 +216,9 @@ public abstract class KeyBindingMixin implements IKeyBinding
 			
 			final int priority = ikb.getCmbKeys().size();
 			final int idx = Collections.binarySearch( priority_lst, priority );
-			final int insert_idx = lst.size() - ( idx < 0 ? -idx - 1 : idx );
-			lst.add( insert_idx, ikb );
-			return lst;
+			final int insert_idx = update_lst.size() - ( idx < 0 ? -idx - 1 : idx );
+			update_lst.add( insert_idx, ikb );
+			return update_lst;
 		} );
 	}
 	
