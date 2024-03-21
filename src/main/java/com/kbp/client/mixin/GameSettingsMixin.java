@@ -31,7 +31,7 @@ public class GameSettingsMixin
 	
 	
 	@Inject( method = "load", at = @At( "HEAD" ) )
-	public void onLoad( CallbackInfo ci )
+	private void onLoad( CallbackInfo ci )
 	{
 		if ( !this.optionsFile.exists() )
 		{
@@ -49,7 +49,7 @@ public class GameSettingsMixin
 		),
 		locals = LocalCapture.CAPTURE_FAILHARD
 	)
-	public void onLoad(
+	private void onLoad(
 		CallbackInfo ci,
 		CompoundNBT compoundnbt,
 		CompoundNBT compoundnbt1

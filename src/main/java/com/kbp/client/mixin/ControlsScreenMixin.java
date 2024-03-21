@@ -37,12 +37,9 @@ public abstract class ControlsScreenMixin extends SettingsScreen
 	private final ActiveInputTracker input_tracker = new ActiveInputTracker();
 	
 	
-	public ControlsScreenMixin(
-		Screen parent,
-		GameSettings settings,
-		ITextComponent title
-	) { super( parent, settings, title ); }
-	
+	public ControlsScreenMixin( Screen parent, GameSettings settings, ITextComponent title ) {
+		super( parent, settings, title );
+	}
 	
 	@Override
 	public boolean keyPressed( int key, int scan_code, int modifier )

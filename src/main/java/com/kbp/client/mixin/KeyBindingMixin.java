@@ -206,11 +206,8 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	{
 		final IKeyBinding ikb = ( IKeyBinding ) kb;
 		UPDATE_TABLE.compute( kb.getKeyBinding().getKey(), ( k, lst ) -> {
-			if ( lst == null ) {
-				lst = new ArrayList<>();
-			}
-			
-			final List< Integer > priority_lst = lst.stream()
+			final List< IKeyBinding > update_lst = lst != null ? lst : new ArrayList<>();
+			final List< Integer > priority_lst = update_lst.stream()
 				.map( IPatchedKeyBinding::getCmbKeys )
 				.map( AbstractCollection::size )
 				.collect( Collectors.toList() );
@@ -218,9 +215,9 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 			
 			final int priority = ikb.getCmbKeys().size();
 			final int idx = Collections.binarySearch( priority_lst, priority );
-			final int insert_idx = lst.size() - ( idx < 0 ? -idx - 1 : idx );
-			lst.add( insert_idx, ikb );
-			return lst;
+			final int insert_idx = update_lst.size() - ( idx < 0 ? -idx - 1 : idx );
+			update_lst.add( insert_idx, ikb );
+			return update_lst;
 		} );
 	}
 	
@@ -358,6 +355,33 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	@Override
 	public void setKeyModifierAndCode( KeyModifier keyModifier, Input keyCode ) {
 		this.setKeyAndCmbKeys( keyCode, MODIFIER_2_CMB_KEYS.get( keyModifier ).iterator() );
+	}
+	
+	@Override
+	public boolean isConflictContextAndModifierActive()
+	{
+		return (
+			this.getKeyConflictContext().isActive()
+			&& ACTIVE_INPUTS.containsAll( this.getCmbKeys() )
+		);
+	}
+	
+	@Override
+	public boolean hasKeyCodeModifierConflict( KeyBinding other )
+	{
+		final IKeyConflictContext ctx0 = this.getKeyConflictContext();
+		final IKeyConflictContext ctx1 = other.getKeyConflictContext();
+		final boolean is_ctx_conflict = ctx0.conflicts( ctx1 ) || ctx1.conflicts( ctx0 );
+		if ( !is_ctx_conflict ) {
+			return false;
+		}
+		
+		final IPatchedKeyBinding other_ = ( IPatchedKeyBinding ) other;
+		final ImmutableSet< Input > cmb0 = this.getCmbKeys();
+		final ImmutableSet< Input > cmb1 = other_.getCmbKeys();
+		final Input key0 = this.getKey();
+		final Input key1 = other.getKey();
+		return cmb0.contains( key1 ) || cmb1.contains( key0 );
 	}
 	
 	@Override

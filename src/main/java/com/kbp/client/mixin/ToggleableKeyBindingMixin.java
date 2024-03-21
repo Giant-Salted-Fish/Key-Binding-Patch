@@ -16,11 +16,9 @@ public abstract class ToggleableKeyBindingMixin extends KeyBinding
 	private BooleanSupplier needsToggle;
 	
 	
-	public ToggleableKeyBindingMixin(
-		String p_i45001_1_,
-		int p_i45001_2_,
-		String p_i45001_3_
-	) { super( p_i45001_1_, p_i45001_2_, p_i45001_3_ ); }
+	public ToggleableKeyBindingMixin( String p_i45001_1_, int p_i45001_2_, String p_i45001_3_ ) {
+		super( p_i45001_1_, p_i45001_2_, p_i45001_3_ );
+	}
 	
 	@Override
 	public void setDown( boolean is_down )
