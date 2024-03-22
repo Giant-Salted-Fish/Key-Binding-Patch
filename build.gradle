@@ -1,13 +1,8 @@
-// See https://gitlab.com/gofancy/fancygradle
 plugins {
 	id 'maven-publish'
 	id 'net.minecraftforge.gradle' version '5.1.+'
 	id 'org.spongepowered.mixin' version '0.7.+'
 }
-
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'maven-publish'
-apply plugin: 'org.spongepowered.mixin'
 
 version = "1.16.5-1.2.0.3"
 group = "com.kbp"  // http://maven.apache.org/guides/mini/guide-naming-conventions.html
@@ -27,7 +22,7 @@ minecraft {
 	// Channel:   Version:
 	// snapshot   YYYYMMDD   Snapshot are built nightly.
 	// stable     #          Stables are built at the discretion of the MCP team.
-	// official   MCVersion  Official field/method names from Mojang mapping files
+	// official   MCVersion  Official field/method names from Mojang mapping files.
 	//
 	// You must be aware of the Mojang license when using the 'official' mappings.
 	// See more information here: https://github.com/MinecraftForge/MCPConfig/blob/master/Mojang.md
