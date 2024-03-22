@@ -1,6 +1,8 @@
 {
 	"pack": {
-		"description": "Resources for Key Binding Patch",
-		"pack_format": 9
+		"description": {
+			"text": "Resources for ${mod_name}."
+		},
+		"pack_format": 15
 	}
 }

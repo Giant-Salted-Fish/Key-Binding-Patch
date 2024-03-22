@@ -9,6 +9,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.screens.OptionsSubScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.controls.KeyBindsList;
 import net.minecraft.client.gui.screens.controls.KeyBindsScreen;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
@@ -25,6 +26,9 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 	@Shadow
 	public long lastKeySelection;
 	
+	@Shadow
+	private KeyBindsList keyBindsList;
+	
 	
 	// It turns out that Forge will automatically set #selectedKey to null in
 	// certain circumstances when keyboard key is released, so we have to
@@ -36,8 +40,8 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 	private final ActiveKeyTracker key_tracker = new ActiveKeyTracker();
 	
 	
-	public KeyBindsScreenMixin( Screen parent, Options settings, Component title ) {
-		super( parent, settings, title );
+	public KeyBindsScreenMixin( Screen p_96284_, Options p_96285_, Component p_96286_ ) {
+		super( p_96284_, p_96285_, p_96286_ );
 	}
 	
 	@Override
@@ -114,6 +118,6 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 		
 		this.shadow_selected_key = null;
 		this.selectedKey = null;
-		KeyMapping.resetMapping();
+		this.keyBindsList.resetMappingAndUpdateButtons();
 	}
 }

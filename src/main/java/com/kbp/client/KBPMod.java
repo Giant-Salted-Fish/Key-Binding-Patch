@@ -17,8 +17,6 @@ public final class KBPMod
 {
 	public KBPMod()
 	{
-		// Make sure the mod being absent on the other network side does not \
-		// cause the client to display the server as incompatible.
 		ModLoadingContext.get().registerExtensionPoint(
 			DisplayTest.class,
 			() -> new DisplayTest(

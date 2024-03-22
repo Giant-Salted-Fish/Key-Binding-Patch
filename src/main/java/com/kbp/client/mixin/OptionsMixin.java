@@ -5,12 +5,12 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Options;
+import net.minecraft.client.Options.FieldAccess;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.At.Shift;
-import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -39,7 +39,8 @@ public abstract class OptionsMixin
 	}
 	
 	@Inject(
-		method = "processOptions",
+		method = "processOptionsForge",
+		remap = false,
 		at = @At(
 			value = "INVOKE",
 			target = "Lnet/minecraft/client/KeyMapping;setKeyModifierAndCode(Lnet/minecraftforge/client/settings/KeyModifier;Lcom/mojang/blaze3d/platform/InputConstants$Key;)V",
@@ -48,9 +49,10 @@ public abstract class OptionsMixin
 		),
 		locals = LocalCapture.CAPTURE_FAILHARD
 	)
-	private void onProcessOptions(
-		@Coerce Object p_168428_,
-		CallbackInfo ci, KeyMapping[] var2,
+	private void onProcessOptionsForge(
+		FieldAccess p_168428_,
+		CallbackInfo ci,
+		KeyMapping[] var2,
 		int var3,
 		int var4,
 		KeyMapping keymapping,

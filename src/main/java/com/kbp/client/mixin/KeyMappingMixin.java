@@ -9,11 +9,12 @@ import com.mojang.blaze3d.platform.InputConstants.Type;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.client.extensions.IForgeKeyMapping;
 import net.minecraftforge.client.settings.IKeyConflictContext;
-import net.minecraftforge.client.settings.KeyBindingMap;
+import net.minecraftforge.client.settings.KeyMappingLookup;
 import net.minecraftforge.client.settings.KeyModifier;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -45,7 +46,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	
 	@Shadow
 	@Final
-	private static KeyBindingMap MAP;
+	private static KeyMappingLookup MAP;
 	
 	@Shadow
 	boolean isDown;
@@ -63,7 +64,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	public abstract Key getDefaultKey();
 	
 	@Shadow
-	public abstract void setKey( Key key );
+	public abstract void setKey( Key p_90849_ );
 	
 	
 	// >>> Unique fields <<<
@@ -195,13 +196,14 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	@Overwrite
 	public static void resetMapping()
 	{
-		MAP.clearMap();
+		MAP.clear();
 		UPDATE_TABLE.clear();
 		ALL.values().stream()
 			.filter( km -> km.getKey() != InputConstants.UNKNOWN )
 			.forEach( KeyMappingMixin::__regisToUpdateTable );
 	}
 	
+	@Unique
 	private static void __regisToUpdateTable( KeyMapping km )
 	{
 		final IKeyMapping ikm = ( IKeyMapping ) km;
@@ -290,7 +292,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 			.reduce( ( k0, k1 ) -> k0 + " + " + k1 )
 			.map( s -> s + " + " + key )
 			.orElse( key );
-		return new TextComponent( msg );
+		return Component.literal( msg );
 	}
 	
 	/**
@@ -353,8 +355,16 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	}
 	
 	@Override
-	public void setKeyModifierAndCode( KeyModifier keyModifier, Key keyCode ) {
-		this.setKeyAndCmbKeys( keyCode, MODIFIER_2_CMB_KEYS.get( keyModifier ).iterator() );
+	public void setKeyModifierAndCode( @Nullable KeyModifier keyModifier, @NotNull Key keyCode )
+	{
+		// This part related to the modification by Forge in KeyBindsList.KeyEntry \
+		// and it only presents in the production environment not in development \
+		// environment. In general, it will clear the binding of the key when player \
+		// click and select the key mapping in the controls screen.
+		final boolean is_selected_in_key_binds_screen = keyModifier == null; // && keyCode == InputConstants.UNKNOWN;
+		if ( !is_selected_in_key_binds_screen ) {
+			this.setKeyAndCmbKeys( keyCode, MODIFIER_2_CMB_KEYS.get( keyModifier ).iterator() );
+		}
 	}
 	
 	@Override

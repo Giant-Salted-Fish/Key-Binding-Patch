@@ -6,7 +6,6 @@ import com.mojang.blaze3d.platform.InputConstants.Key;
 import com.mojang.blaze3d.platform.InputConstants.Type;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyConflictContext;
 
@@ -67,12 +66,11 @@ public abstract class KeyMappingBuilder
 		return this;
 	}
 	
+	/**
+	 * Remember to register the returned key mapping via
+	 * {@link net.minecraftforge.client.event.RegisterKeyMappingsEvent}. Use
+	 * {@link IPatchedKeyMapping#getKeyMapping()} to get corresponding vanilla
+	 * key mapping for registration.
+	 */
 	public abstract IPatchedKeyMapping build();
-	
-	public IPatchedKeyMapping buildAndRegis()
-	{
-		final IPatchedKeyMapping km = this.build();
-		ClientRegistry.registerKeyBinding( km.getKeyMapping() );
-		return km;
-	}
 }
