@@ -25,12 +25,12 @@ minecraft {
 	// The mappings can be changed at any time and must be in the following format.
 	// Channel:   Version:
 	// official   MCVersion             Official field/method names from Mojang mapping files.
-	// parchment  YYYY.MM.DD-MCVersion  Open community-sourced parameter names and javadocs layered on top of official
+	// parchment  YYYY.MM.DD-MCVersion  Open community-sourced parameter names and javadocs layered on top of official.
 	//
 	// You must be aware of the Mojang license when using the 'official' or 'parchment' mappings.
 	// See more information here: https://github.com/MinecraftForge/MCPConfig/blob/master/Mojang.md
 	//
-	// Parchment is an unofficial project maintained by ParchmentMC, separate from MinecraftForge
+	// Parchment is an unofficial project maintained by ParchmentMC, separate from MinecraftForge.
 	// Additional setup is needed to use their mappings: https://parchmentmc.org/docs/getting-started
 	//
 	// Use non-default mappings at your own risk. They may not always work.
@@ -119,7 +119,7 @@ sourceSets.main.resources {
 }
 
 repositories {
-	// Put repositories for dependencies here..
+	// Put repositories for dependencies here.
 	// ForgeGradle automatically adds the Forge maven and Maven Central for you.
 
 	// If you have mod jar dependencies in ./libs, you can declare them as a repository like so.
