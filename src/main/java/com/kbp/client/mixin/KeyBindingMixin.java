@@ -203,6 +203,7 @@ public abstract class KeyBindingMixin implements IKeyBinding
 			.forEach( KeyBindingMixin::__regisToUpdateTable );
 	}
 	
+	@Unique
 	private static void __regisToUpdateTable( KeyBinding kb )
 	{
 		final IKeyBinding ikb = ( IKeyBinding ) kb;
