@@ -7,7 +7,7 @@ import net.minecraftforge.fml.common.Mod;
 
 @Mod(
 	modid = "key_binding_patch",
-	version = "1.12.2-1.2.0.3",
+	version = "1.12.2-1.2.0.4",
 	clientSideOnly = true,
 	updateJSON = "https://raw.githubusercontent.com/Giant-Salted-Fish/Key-Binding-Patch/1.16.X/update.json",
 	acceptedMinecraftVersions = "[1.12,1.13)",
