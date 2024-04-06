@@ -202,6 +202,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 			.forEach( KeyMappingMixin::__regisToUpdateTable );
 	}
 	
+	@Unique
 	private static void __regisToUpdateTable( KeyMapping km )
 	{
 		final IKeyMapping ikm = ( IKeyMapping ) km;
