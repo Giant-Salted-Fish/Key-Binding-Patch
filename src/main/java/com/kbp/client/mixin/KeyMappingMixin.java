@@ -91,7 +91,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	private ImmutableSet< Key > default_cmb_keys = ImmutableSet.of();
 	
 	@Unique
-	private ImmutableSet< Key > current_cmb_keys = this.getDefaultCmbKeys();
+	private ImmutableSet< Key > current_cmb_keys = ImmutableSet.of();
 	
 	@Unique
 	private final HashSet< Runnable > press_callbacks = new HashSet<>();
@@ -234,8 +234,9 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 		String category,
 		CallbackInfo info
 	) {
-		this.setDefaultCmbKeys( MODIFIER_2_CMB_KEYS.get( keyModifier ).iterator() );
-		this.setKeyAndCmbKeys( keyCode, this.getDefaultCmbKeys().iterator() );
+		final ImmutableSet< Key > cmb_keys = MODIFIER_2_CMB_KEYS.get( keyModifier );
+		this.default_cmb_keys = cmb_keys;
+		this.current_cmb_keys = cmb_keys;
 		
 		// Modifier will be ignored in the rest of the part.
 		this.keyModifierDefault = KeyModifier.NONE;
