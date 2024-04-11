@@ -14,7 +14,7 @@ showAsResourcePack=false
 	credits="All code contributors."
 	authors="Giant_Salted_Fish"
 	description='''
-Patches the vanilla Key binding system to support better key combinations and resolve conflicts.
+Patches the vanilla key binding system to support better key combinations and resolve conflicts.
 '''
 
 [[dependencies.key_binding_patch]]
