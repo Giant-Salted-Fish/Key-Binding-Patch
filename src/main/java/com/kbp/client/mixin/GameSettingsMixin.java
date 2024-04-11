@@ -65,14 +65,6 @@ public abstract class GameSettingsMixin
 	}
 	
 	@Inject(
-		method = "<init>(Lnet/minecraft/client/Minecraft;Ljava/io/File;)V",
-		at = @At( "RETURN" )
-	)
-	private void onNew( Minecraft mcIn, File mcDataDir, CallbackInfo ci ) {
-		this.key_bindings_file = new File( mcDataDir, "key_bindings.json" );
-	}
-	
-	@Inject(
 		method = "saveOptions",
 		at = @At(
 			value = "INVOKE",
@@ -111,6 +103,14 @@ public abstract class GameSettingsMixin
 	)
 	private void onLoadOptions( CallbackInfo info )
 	{
+		// Because #loadOptions(...) is called in constructor, we can not \
+		// init #key_bindings_file in the constructor.
+		if ( this.key_bindings_file == null )
+		{
+			final File mc_data_dir = Minecraft.getMinecraft().gameDir;
+			this.key_bindings_file = new File( mc_data_dir, "key_bindings.json" );
+		}
+		
 		if ( !this.key_bindings_file.exists() ) {
 			return;
 		}
