@@ -16,5 +16,5 @@ public interface IKeyMapping extends IPatchedKeyMapping
 {
 	void incrClickCount();
 	
-	void setDefaultCmbKeys( Iterator< Key > cmb_keys );
+	void initDefaultCmbKeys( Iterator< Key > cmb_keys );
 }
