@@ -25,6 +25,6 @@ public class PatchedKeyBinding extends KeyBinding implements IPatchedKeyBinding
 		super( description, key_conflict_context, key, category );
 		
 		final IKeyBinding kb = ( IKeyBinding ) this;
-		kb.setDefaultCmbKeys( cmb_keys );
+		kb.initDefaultCmbKeys( cmb_keys );
 	}
 }

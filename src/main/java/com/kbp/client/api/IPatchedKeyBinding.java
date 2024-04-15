@@ -26,7 +26,7 @@ public interface IPatchedKeyBinding
 		throw new UnsupportedOperationException();
 	}
 	
-	default void regisPressCallback( Runnable callback ) {
+	default void addPressCallback( Runnable callback ) {
 		throw new UnsupportedOperationException();
 	}
 	
@@ -34,7 +34,7 @@ public interface IPatchedKeyBinding
 		throw new UnsupportedOperationException();
 	}
 	
-	default void regisReleaseCallback( Runnable callback ) {
+	default void addReleaseCallback( Runnable callback ) {
 		throw new UnsupportedOperationException();
 	}
 	

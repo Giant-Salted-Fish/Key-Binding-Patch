@@ -15,5 +15,5 @@ public interface IKeyBinding extends IPatchedKeyBinding
 {
 	void incrPressTime();
 	
-	void setDefaultCmbKeys( Iterator< Integer > cmb_keys );
+	void initDefaultCmbKeys( Iterator< Integer > cmb_keys );
 }
