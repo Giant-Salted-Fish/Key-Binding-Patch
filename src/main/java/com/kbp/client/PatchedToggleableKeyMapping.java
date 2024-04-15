@@ -26,6 +26,6 @@ public class PatchedToggleableKeyMapping extends ToggleKeyMapping implements IPa
 		super( description, key_code, category, toggle_controller );
 		
 		final IKeyMapping km = ( IKeyMapping ) this;
-		km.setDefaultCmbKeys( cmb_keys );
+		km.initDefaultCmbKeys( cmb_keys );
 	}
 }
