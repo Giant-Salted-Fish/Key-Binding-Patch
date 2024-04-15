@@ -27,7 +27,7 @@ public class PatchedToggleableKeyBinding extends ToggleableKeyBinding implements
 		super( description, key_code, category, toggle_controller );
 		
 		final IKeyBinding kb = ( IKeyBinding ) this;
-		kb.setDefaultCmbKeys( cmb_keys );
+		kb.initDefaultCmbKeys( cmb_keys );
 	}
 	
 	@Override

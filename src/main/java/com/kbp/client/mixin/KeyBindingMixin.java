@@ -392,8 +392,10 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	@Override
-	public final void setDefaultCmbKeys( Iterator< Input > cmb_keys ) {
+	public final void initDefaultCmbKeys( Iterator< Input > cmb_keys )
+	{
 		this.default_cmb_keys = ImmutableSet.copyOf( cmb_keys );
+		this.current_cmb_keys = this.default_cmb_keys;
 	}
 	
 	@Override
@@ -419,7 +421,7 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	@Override
-	public void regisPressCallback( Runnable callback ) {
+	public void addPressCallback( Runnable callback ) {
 		this.press_callbacks.add( callback );
 	}
 	
@@ -429,7 +431,7 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	@Override
-	public void regisReleaseCallback( Runnable callback ) {
+	public void addReleaseCallback( Runnable callback ) {
 		this.release_callbacks.add( callback );
 	}
 	

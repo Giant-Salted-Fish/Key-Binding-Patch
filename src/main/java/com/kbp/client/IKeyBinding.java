@@ -16,5 +16,5 @@ public interface IKeyBinding extends IPatchedKeyBinding
 {
 	void incrClickCount();
 	
-	void setDefaultCmbKeys( Iterator< Input > cmb_keys );
+	void initDefaultCmbKeys( Iterator< Input > cmb_keys );
 }
