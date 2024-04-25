@@ -5,11 +5,14 @@ import com.kbp.client.api.KeyMappingBuilder;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.IExtensionPoint.DisplayTest;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
 @Mod( "key_binding_patch" )
@@ -31,9 +34,24 @@ public final class KBPMod
 	 * {@link KeyMapping} instances because there is no guarantee that
 	 * {@link KeyMapping} will always implement {@link IPatchedKeyMapping} in
 	 * the future.
+	 *
+	 * @see #findByName(String)
 	 */
 	public static IPatchedKeyMapping getPatched( KeyMapping key_binding ) {
 		return ( IPatchedKeyMapping ) key_binding;
+	}
+	
+	/**
+	 * @see #getPatched(KeyMapping)
+	 */
+	public static Optional< IPatchedKeyMapping > findByName( String name )
+	{
+		return (
+			Arrays.stream( Minecraft.getInstance().options.keyMappings )
+			.filter( kb -> kb.getName().equals( name ) )
+			.findFirst()
+			.map( KBPMod::getPatched )
+		);
 	}
 	
 	/**
@@ -43,8 +61,7 @@ public final class KBPMod
 	 */
 	public static KeyMappingBuilder newBuilder( String description )
 	{
-		return new KeyMappingBuilder()
-		{
+		return new KeyMappingBuilder() {
 			@Override
 			public IPatchedKeyMapping build()
 			{
@@ -67,8 +84,7 @@ public final class KBPMod
 	public static KeyMappingBuilder newToggleableBuilder(
 		String description, BooleanSupplier toggle_controller
 	) {
-		return new KeyMappingBuilder()
-		{
+		return new KeyMappingBuilder() {
 			@Override
 			public IPatchedKeyMapping build()
 			{
