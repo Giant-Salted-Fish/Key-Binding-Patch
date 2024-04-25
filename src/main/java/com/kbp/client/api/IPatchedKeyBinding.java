@@ -1,18 +1,17 @@
 package com.kbp.client.api;
 
 import com.google.common.collect.ImmutableSet;
+import com.kbp.client.KBPMod;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings.Input;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.Iterator;
-import java.util.function.BooleanSupplier;
 
 /**
- * @see com.kbp.client.KBPMod#getPatched(KeyBinding)
- * @see com.kbp.client.KBPMod#newBuilder(String)
- * @see com.kbp.client.KBPMod#newToggleableBuilder(String, BooleanSupplier)
+ * @see KBPMod#getPatched(KeyBinding)
+ * @see KBPMod#findByName(String)
  */
 @OnlyIn( Dist.CLIENT )
 public interface IPatchedKeyBinding

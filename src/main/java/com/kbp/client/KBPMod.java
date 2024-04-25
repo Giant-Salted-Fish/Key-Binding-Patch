@@ -2,6 +2,7 @@ package com.kbp.client;
 
 import com.kbp.client.api.IPatchedKeyBinding;
 import com.kbp.client.api.KeyBindingBuilder;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.client.util.InputMappings.Input;
@@ -11,6 +12,8 @@ import net.minecraftforge.fml.common.Mod;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
 @Mod( "key_binding_patch" )
@@ -34,9 +37,24 @@ public final class KBPMod
 	 * {@link KeyBinding} instances because there is no guarantee that
 	 * {@link KeyBinding} will always implement {@link IPatchedKeyBinding} in
 	 * the future.
+	 *
+	 * @see #findByName(String)
 	 */
 	public static IPatchedKeyBinding getPatched( KeyBinding key_binding ) {
 		return ( IPatchedKeyBinding ) key_binding;
+	}
+	
+	/**
+	 * @see #getPatched(KeyBinding)
+	 */
+	public static Optional< IPatchedKeyBinding > findByName( String name )
+	{
+		return (
+			Arrays.stream( Minecraft.getInstance().options.keyMappings )
+			.filter( kb -> kb.getName().equals( name ) )
+			.findFirst()
+			.map( KBPMod::getPatched )
+		);
 	}
 	
 	/**
@@ -46,8 +64,7 @@ public final class KBPMod
 	 */
 	public static KeyBindingBuilder newBuilder( String description )
 	{
-		return new KeyBindingBuilder()
-		{
+		return new KeyBindingBuilder() {
 			@Override
 			public IPatchedKeyBinding build()
 			{
@@ -70,8 +87,7 @@ public final class KBPMod
 	public static KeyBindingBuilder newToggleableBuilder(
 		String description, BooleanSupplier toggle_controller
 	) {
-		return new KeyBindingBuilder()
-		{
+		return new KeyBindingBuilder() {
 			@Override
 			public IPatchedKeyBinding build()
 			{
