@@ -11,6 +11,7 @@ import java.util.Iterator;
 
 /**
  * @see KBPMod#getPatched(KeyMapping)
+ * @see KBPMod#findByName(String)
  */
 @OnlyIn( Dist.CLIENT )
 public interface IPatchedKeyMapping

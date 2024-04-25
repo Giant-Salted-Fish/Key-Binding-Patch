@@ -1,6 +1,7 @@
 package com.kbp.client.api;
 
 import com.google.common.collect.Iterators;
+import com.kbp.client.KBPMod;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import com.mojang.blaze3d.platform.InputConstants.Type;
@@ -13,7 +14,12 @@ import net.minecraftforge.client.settings.KeyConflictContext;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.function.BooleanSupplier;
 
+/**
+ * @see KBPMod#newBuilder(String)
+ * @see KBPMod#newToggleableBuilder(String, BooleanSupplier)
+ */
 @OnlyIn( Dist.CLIENT )
 public abstract class KeyMappingBuilder
 {
