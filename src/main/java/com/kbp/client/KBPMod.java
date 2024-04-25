@@ -2,12 +2,16 @@ package com.kbp.client;
 
 import com.kbp.client.api.IPatchedKeyBinding;
 import com.kbp.client.api.KeyBindingBuilder;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.common.Mod;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 @Mod(
 	modid = "key_binding_patch",
-	version = "1.12.2-1.3.0.0",
+	version = "1.12.2-1.3.1.0",
 	clientSideOnly = true,
 	updateJSON = "https://raw.githubusercontent.com/Giant-Salted-Fish/Key-Binding-Patch/1.16.X/update.json",
 	acceptedMinecraftVersions = "[1.12,1.13)",
@@ -20,9 +24,24 @@ public final class KBPMod
 	 * {@link KeyBinding} instances because there is no guarantee that
 	 * {@link KeyBinding} will always implement {@link IPatchedKeyBinding} in
 	 * the future.
+	 *
+	 * @see #findByName(String)
 	 */
 	public static IPatchedKeyBinding getPatched( KeyBinding key_binding ) {
 		return ( IPatchedKeyBinding ) key_binding;
+	}
+	
+	/**
+	 * @see #getPatched(KeyBinding)
+	 */
+	public static Optional< IPatchedKeyBinding > findByName( String name )
+	{
+		return (
+			Arrays.stream( Minecraft.getMinecraft().gameSettings.keyBindings )
+			.filter( kb -> kb.getKeyDescription().equals( name ) )
+			.findFirst()
+			.map( KBPMod::getPatched )
+		);
 	}
 	
 	/**
@@ -30,8 +49,7 @@ public final class KBPMod
 	 */
 	public static KeyBindingBuilder newBuilder( String description )
 	{
-		return new KeyBindingBuilder()
-		{
+		return new KeyBindingBuilder() {
 			@Override
 			public IPatchedKeyBinding build()
 			{

@@ -1,5 +1,6 @@
 package com.kbp.client.api;
 
+import com.kbp.client.KBPMod;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -11,6 +12,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 
+/**
+ * @see KBPMod#newBuilder(String)
+ */
 @SideOnly( Side.CLIENT )
 public abstract class KeyBindingBuilder
 {
