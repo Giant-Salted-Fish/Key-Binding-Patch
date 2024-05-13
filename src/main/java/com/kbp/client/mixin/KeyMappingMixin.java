@@ -208,7 +208,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	{
 		final var ikm = ( IKeyMapping ) km;
 		UPDATE_TABLE.compute( km.getKey(), ( k, lst ) -> {
-			final List< IKeyMapping > update_lst = lst != null ? lst : new ArrayList<>();
+			final var update_lst = lst != null ? lst : new ArrayList< IKeyMapping >();
 			final var priority_lst = update_lst.stream()
 				.map( IPatchedKeyMapping::getCmbKeys )
 				.map( AbstractCollection::size )
