@@ -25,7 +25,7 @@ public class PatchedKeyMapping extends KeyMapping implements IPatchedKeyMapping
 	) {
 		super( description, key_conflict_context, key, category );
 		
-		final IKeyMapping ikb = ( IKeyMapping ) this;
+		final var ikb = ( IKeyMapping ) this;
 		ikb.initDefaultCmbKeys( cmb_keys );
 	}
 }

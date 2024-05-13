@@ -77,8 +77,8 @@ public abstract class KeyMappingBuilder
 	
 	public IPatchedKeyMapping buildAndRegis()
 	{
-		final IPatchedKeyMapping km = this.build();
-		ClientRegistry.registerKeyBinding( km.getKeyMapping() );
-		return km;
+		final var pkm = this.build();
+		ClientRegistry.registerKeyBinding( pkm.getKeyMapping() );
+		return pkm;
 	}
 }
