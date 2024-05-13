@@ -128,27 +128,27 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 			return;
 		}
 		
-		final boolean is_already_active = !ACTIVE_KEYS.add( key );
+		final var is_already_active = !ACTIVE_KEYS.add( key );
 		if ( is_already_active ) {
 			return;
 		}
 		
-		final Iterator< IKeyMapping > itr = UPDATE_TABLE.getOrDefault( key, Collections.emptyList() ).iterator();
+		final var itr = UPDATE_TABLE.getOrDefault( key, Collections.emptyList() ).iterator();
 		while ( itr.hasNext() )
 		{
-			final IKeyMapping km = itr.next();
-			final ImmutableSet< Key > cmb_keys = km.getCmbKeys();
+			final var km = itr.next();
+			final var cmb_keys = km.getCmbKeys();
 			if ( !ACTIVE_KEYS.containsAll( cmb_keys ) ) {
 				continue;
 			}
 			
 			km.getKeyMapping().setDown( true );
-			final int priority = cmb_keys.size();
+			final var priority = cmb_keys.size();
 			while ( itr.hasNext() )
 			{
-				final IKeyMapping after_km = itr.next();
-				final ImmutableSet< Key > after_cmb_keys = after_km.getCmbKeys();
-				final int after_priority = after_cmb_keys.size();
+				final var after_km = itr.next();
+				final var after_cmb_keys = after_km.getCmbKeys();
+				final var after_priority = after_cmb_keys.size();
 				if ( after_priority != priority ) {
 					break;
 				}
@@ -170,10 +170,10 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	{
 		// Copied from overwrite method. It seems that the original \
 		// implementation only cares about the keyboard keys.
-		final Minecraft mc = Minecraft.getInstance();
-		final long window_handle = mc.getWindow().getWindow();
+		final var mc = Minecraft.getInstance();
+		final var window_handle = mc.getWindow().getWindow();
 		ACTIVE_KEYS.removeIf( key -> {
-			final boolean is_still_active = (
+			final var is_still_active = (
 				key.getType() != Type.KEYSYM // && key != InputConstants.UNKNOWN
 				&& InputConstants.isKeyDown( window_handle, key.getValue() )
 			);
@@ -206,18 +206,18 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	@Unique
 	private static void __regisToUpdateTable( KeyMapping km )
 	{
-		final IKeyMapping ikm = ( IKeyMapping ) km;
+		final var ikm = ( IKeyMapping ) km;
 		UPDATE_TABLE.compute( km.getKey(), ( k, lst ) -> {
 			final List< IKeyMapping > update_lst = lst != null ? lst : new ArrayList<>();
-			final List< Integer > priority_lst = update_lst.stream()
+			final var priority_lst = update_lst.stream()
 				.map( IPatchedKeyMapping::getCmbKeys )
 				.map( AbstractCollection::size )
 				.collect( Collectors.toList() );
 			Collections.reverse( priority_lst );
 			
-			final int priority = ikm.getCmbKeys().size();
-			final int idx = Collections.binarySearch( priority_lst, priority );
-			final int insert_idx = update_lst.size() - ( idx < 0 ? -idx - 1 : idx );
+			final var priority = ikm.getCmbKeys().size();
+			final var idx = Collections.binarySearch( priority_lst, priority );
+			final var insert_idx = update_lst.size() - ( idx < 0 ? -idx - 1 : idx );
 			update_lst.add( insert_idx, ikm );
 			return update_lst;
 		} );
@@ -236,7 +236,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 		String category,
 		CallbackInfo info
 	) {
-		final ImmutableSet< Key > cmb_keys = MODIFIER_2_CMB_KEYS.get( keyModifier );
+		final var cmb_keys = MODIFIER_2_CMB_KEYS.get( keyModifier );
 		this.default_cmb_keys = cmb_keys;
 		this.current_cmb_keys = cmb_keys;
 		
@@ -261,18 +261,18 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	@Overwrite
 	public boolean same( KeyMapping other )
 	{
-		final IKeyConflictContext ctx0 = this.getKeyConflictContext();
-		final IKeyConflictContext ctx1 = other.getKeyConflictContext();
-		final boolean is_ctx_conflict = ctx0.conflicts( ctx1 ) || ctx1.conflicts( ctx0 );
+		final var ctx0 = this.getKeyConflictContext();
+		final var ctx1 = other.getKeyConflictContext();
+		final var is_ctx_conflict = ctx0.conflicts( ctx1 ) || ctx1.conflicts( ctx0 );
 		if ( !is_ctx_conflict ) {
 			return false;
 		}
 		
-		final IPatchedKeyMapping other_ = ( IPatchedKeyMapping ) other;
-		final ImmutableSet< Key > cmb0 = this.getCmbKeys();
-		final ImmutableSet< Key > cmb1 = other_.getCmbKeys();
-		final Key key0 = this.getKey();
-		final Key key1 = other.getKey();
+		final var other_ = ( IPatchedKeyMapping ) other;
+		final var cmb0 = this.getCmbKeys();
+		final var cmb1 = other_.getCmbKeys();
+		final var key0 = this.getKey();
+		final var key1 = other.getKey();
 		return (
 			cmb0.contains( key1 ) || cmb1.contains( key0 )
 			|| key0.equals( key1 ) && cmb0.equals( cmb1 )
@@ -286,8 +286,8 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	@Overwrite
 	public Component getTranslatedKeyMessage()
 	{
-		final String key = this.getKey().getDisplayName().getString();
-		final String msg = this.getCmbKeys().stream()
+		final var key = this.getKey().getDisplayName().getString();
+		final var msg = this.getCmbKeys().stream()
 			.map( Key::getDisplayName )
 			.map( Component::getString )
 			.reduce( ( k0, k1 ) -> k0 + " + " + k1 )
@@ -317,9 +317,9 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	public String saveString()
 	{
 		// This is kind of hacky. See OptionsMixin.
-		final String key = this.getKey().getName();
-		final String modifier = KeyModifier.NONE.toString();
-		final String cmb_keys = this.getCmbKeys().stream()
+		final var key = this.getKey().getName();
+		final var modifier = KeyModifier.NONE.toString();
+		final var cmb_keys = this.getCmbKeys().stream()
 			.map( Key::getName )
 			.reduce( ( s0, s1 ) -> s0 + "+" + s1 )
 			.orElse( "" );
@@ -362,7 +362,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 		// and it only presents in the production environment not in development \
 		// environment. In general, it will clear the binding of the key when player \
 		// click and select the key mapping in the controls screen.
-		final boolean is_selected_in_key_binds_screen = keyModifier == null; // && keyCode == InputConstants.UNKNOWN;
+		final var is_selected_in_key_binds_screen = keyModifier == null; // && keyCode == InputConstants.UNKNOWN;
 		if ( !is_selected_in_key_binds_screen ) {
 			this.setKeyAndCmbKeys( keyCode, MODIFIER_2_CMB_KEYS.get( keyModifier ).iterator() );
 		}
@@ -380,18 +380,18 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	@Override
 	public boolean hasKeyModifierConflict( KeyMapping other )
 	{
-		final IKeyConflictContext ctx0 = this.getKeyConflictContext();
-		final IKeyConflictContext ctx1 = other.getKeyConflictContext();
-		final boolean is_ctx_conflict = ctx0.conflicts( ctx1 ) || ctx1.conflicts( ctx0 );
+		final var ctx0 = this.getKeyConflictContext();
+		final var ctx1 = other.getKeyConflictContext();
+		final var is_ctx_conflict = ctx0.conflicts( ctx1 ) || ctx1.conflicts( ctx0 );
 		if ( !is_ctx_conflict ) {
 			return false;
 		}
 		
-		final IPatchedKeyMapping other_ = ( IPatchedKeyMapping ) other;
-		final ImmutableSet< Key > cmb0 = this.getCmbKeys();
-		final ImmutableSet< Key > cmb1 = other_.getCmbKeys();
-		final Key key0 = this.getKey();
-		final Key key1 = other.getKey();
+		final var other_ = ( IPatchedKeyMapping ) other;
+		final var cmb0 = this.getCmbKeys();
+		final var cmb1 = other_.getCmbKeys();
+		final var key0 = this.getKey();
+		final var key1 = other.getKey();
 		return cmb0.contains( key1 ) || cmb1.contains( key0 );
 	}
 	

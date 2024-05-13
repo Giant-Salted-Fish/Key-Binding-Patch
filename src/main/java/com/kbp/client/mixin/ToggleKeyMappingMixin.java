@@ -23,7 +23,7 @@ public abstract class ToggleKeyMappingMixin extends KeyMapping
 	@Override
 	public void setDown( boolean is_down )
 	{
-		final boolean is_toggle_mode = this.needsToggle.getAsBoolean();
+		final var is_toggle_mode = this.needsToggle.getAsBoolean();
 		if ( !is_toggle_mode ) {
 			super.setDown( is_down );
 		}

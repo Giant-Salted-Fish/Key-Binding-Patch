@@ -90,7 +90,7 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 		}
 		
 		this.shadow_selected_key = this.selectedKey;
-		final Key key = InputConstants.Type.MOUSE.getOrCreate( button );
+		final var key = InputConstants.Type.MOUSE.getOrCreate( button );
 		this.key_tracker.addActive( key );
 		return true;
 	}
@@ -98,7 +98,7 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 	@Override
 	public boolean mouseReleased( double x, double y, int button )
 	{
-		final boolean is_select_click_release = this.key_tracker.noKeyActive();
+		final var is_select_click_release = this.key_tracker.noKeyActive();
 		if ( this.shadow_selected_key == null || is_select_click_release ) {
 			return super.mouseReleased( x, y, button );
 		}
@@ -111,8 +111,8 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 	@Unique
 	private void __updateSelectedKeyBinding()
 	{
-		final IKeyMapping km = ( IKeyMapping ) this.shadow_selected_key;
-		final Key key = this.key_tracker.getKey();
+		final var km = ( IKeyMapping ) this.shadow_selected_key;
+		final var key = this.key_tracker.getKey();
 		km.setKeyAndCmbKeys( key, this.key_tracker.getCmbKeys() );
 		this.options.setKey( this.shadow_selected_key, key );
 		

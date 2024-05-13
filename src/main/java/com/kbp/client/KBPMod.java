@@ -88,8 +88,8 @@ public final class KBPMod
 			@Override
 			public IPatchedKeyMapping build()
 			{
-				final Key default_key = this.key;
-				final PatchedToggleableKeyMapping tkm = new PatchedToggleableKeyMapping(
+				final var default_key = this.key;
+				final var tkm = new PatchedToggleableKeyMapping(
 					description,
 					InputConstants.UNKNOWN.getValue(),
 					this.cmb_keys,

@@ -60,18 +60,18 @@ public abstract class OptionsMixin
 		String s1
 	) {
 		// This part is bit of hacky. See KeyMappingMixin#saveString().
-		final String[] splits = s1.split( ":" );
+		final var splits = s1.split( ":" );
 		if ( splits.length < 3 ) {
 			return;
 		}
 		
-		final String cmb_keys_data = splits[ 2 ];
+		final var cmb_keys_data = splits[ 2 ];
 		if ( cmb_keys_data.isEmpty() ) {
 			return;
 		}
 		
-		final IKeyMapping km = ( IKeyMapping ) keymapping;
-		final Iterator< Key > cmb_keys = Arrays
+		final var km = ( IKeyMapping ) keymapping;
+		final var cmb_keys = Arrays
 			.stream( cmb_keys_data.split( "\\+" ) )
 			.map( InputConstants::getKey )
 			.iterator();
