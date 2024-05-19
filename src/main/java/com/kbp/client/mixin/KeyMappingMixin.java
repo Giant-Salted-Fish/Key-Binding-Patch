@@ -141,6 +141,11 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 				continue;
 			}
 			
+			final var ctx = km.getKeyMapping().getKeyConflictContext();
+			if ( !ctx.isActive() ) {
+				continue;
+			}
+			
 			km.getKeyMapping().setDown( true );
 			final var priority = cmb_keys.size();
 			while ( itr.hasNext() )
@@ -152,7 +157,8 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 					break;
 				}
 				
-				if ( ACTIVE_KEYS.containsAll( after_cmb_keys ) ) {
+				final var after_ctx = after_km.getKeyMapping().getKeyConflictContext();
+				if ( after_ctx.isActive() && ACTIVE_KEYS.containsAll( after_cmb_keys ) ) {
 					after_km.getKeyMapping().setDown( true );
 				}
 			}
@@ -338,7 +344,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 		// is a public method and can be called by other mods.
 		if ( is_down )
 		{
-			if ( !this.isDown && this.getKeyConflictContext().isActive() )
+			if ( !this.isDown )
 			{
 				this.isDown = true;
 				this.press_callbacks.forEach( Runnable::run );

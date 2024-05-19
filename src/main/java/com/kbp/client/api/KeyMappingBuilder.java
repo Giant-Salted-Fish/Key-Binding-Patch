@@ -28,6 +28,10 @@ public abstract class KeyMappingBuilder
 	protected Iterator< Key > cmb_keys = Collections.emptyIterator();
 	protected IKeyConflictContext conflict_context = KeyConflictContext.IN_GAME;
 	
+	/**
+	 * @see KBPMod#newBuilder(String)
+	 * @see KBPMod#newToggleableBuilder(String, BooleanSupplier)
+	 */
 	public KeyMappingBuilder() { }
 	
 	public KeyMappingBuilder withCategory( String category )
