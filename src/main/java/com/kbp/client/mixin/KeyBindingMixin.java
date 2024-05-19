@@ -136,6 +136,11 @@ public abstract class KeyBindingMixin implements IKeyBinding
 		while ( itr.hasNext() )
 		{
 			final IKeyBinding kb = itr.next();
+			final IKeyConflictContext ctx = kb.getKeyBinding().getKeyConflictContext();
+			if ( !ctx.isActive() ) {
+				continue;
+			}
+			
 			final ImmutableSet< Integer > cmb_keys = kb.getCmbKeys();
 			if ( !ACTIVE_KEYS.containsAll( cmb_keys ) ) {
 				continue;
@@ -152,7 +157,8 @@ public abstract class KeyBindingMixin implements IKeyBinding
 					break;
 				}
 				
-				if ( ACTIVE_KEYS.containsAll( after_cmb_keys ) ) {
+				final IKeyConflictContext after_ctx = after_kb.getKeyBinding().getKeyConflictContext();
+				if ( after_ctx.isActive() && ACTIVE_KEYS.containsAll( after_cmb_keys ) ) {
 					after_kb.pressKey();
 				}
 			}
@@ -365,9 +371,10 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public void pressKey()
 	{
-		if ( !this.pressed && this.getKeyConflictContext().isActive() )
+		if ( !this.pressed )
 		{
 			this.pressed = true;
 			this.press_callbacks.forEach( Runnable::run );
@@ -375,6 +382,7 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public void releaseKey()
 	{
 		if ( this.pressed )
@@ -385,11 +393,13 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public final void incrPressTime() {
 		this.pressTime += 1;
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public final void initDefaultCmbKeys( Iterator< Integer > cmb_keys )
 	{
 		this.default_cmb_keys = ImmutableSet.copyOf( cmb_keys );
@@ -397,16 +407,19 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public ImmutableSet< Integer > getDefaultCmbKeys() {
 		return this.default_cmb_keys;
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public ImmutableSet< Integer > getCmbKeys() {
 		return this.current_cmb_keys;
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public void setKeyAndCmbKeys( int key, Iterator< Integer > cmb_keys )
 	{
 		this.setKeyCode( key );
@@ -414,26 +427,31 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public void addPressCallback( Runnable callback ) {
 		this.press_callbacks.add( callback );
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public boolean removePressCallback( Runnable callback ) {
 		return this.press_callbacks.remove( callback );
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public void addReleaseCallback( Runnable callback ) {
 		this.release_callbacks.add( callback );
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public boolean removeReleaseCallback( Runnable callback ) {
 		return this.release_callbacks.remove( callback );
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public final KeyBinding getKeyBinding()
 	{
 		final Object o = this;

@@ -23,6 +23,9 @@ public abstract class KeyBindingBuilder
 	protected Iterator< Integer > cmb_keys = Collections.emptyIterator();
 	protected IKeyConflictContext conflict_context = KeyConflictContext.IN_GAME;
 	
+	/**
+	 * @see KBPMod#newBuilder(String)
+	 */
 	public KeyBindingBuilder() { }
 	
 	public KeyBindingBuilder withCategory( String category )
