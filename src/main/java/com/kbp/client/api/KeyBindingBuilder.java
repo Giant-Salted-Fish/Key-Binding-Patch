@@ -28,6 +28,10 @@ public abstract class KeyBindingBuilder
 	protected Iterator< Input > cmb_keys = Collections.emptyIterator();
 	protected IKeyConflictContext conflict_context = KeyConflictContext.IN_GAME;
 	
+	/**
+	 * @see KBPMod#newBuilder(String)
+	 * @see KBPMod#newToggleableBuilder(String, BooleanSupplier)
+	 */
 	public KeyBindingBuilder() { }
 	
 	public KeyBindingBuilder withCategory( String category )

@@ -136,6 +136,11 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 		while ( itr.hasNext() )
 		{
 			final IKeyBinding kb = itr.next();
+			final IKeyConflictContext ctx = kb.getKeyBinding().getKeyConflictContext();
+			if ( !ctx.isActive() ) {
+				continue;
+			}
+			
 			final ImmutableSet< Input > cmb_keys = kb.getCmbKeys();
 			if ( !ACTIVE_INPUTS.containsAll( cmb_keys ) ) {
 				continue;
@@ -152,7 +157,8 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 					break;
 				}
 				
-				if ( ACTIVE_INPUTS.containsAll( after_cmb_keys ) ) {
+				final IKeyConflictContext after_ctx = after_kb.getKeyBinding().getKeyConflictContext();
+				if ( after_ctx.isActive() && ACTIVE_INPUTS.containsAll( after_cmb_keys ) ) {
 					after_kb.getKeyBinding().setDown( true );
 				}
 			}
@@ -338,7 +344,7 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 		// is a public method and can be called by any other mods.
 		if ( is_down )
 		{
-			if ( !this.isDown && this.getKeyConflictContext().isActive() )
+			if ( !this.isDown )
 			{
 				this.isDown = true;
 				this.press_callbacks.forEach( Runnable::run );
@@ -387,11 +393,13 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public final void incrClickCount() {
 		this.clickCount += 1;
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public final void initDefaultCmbKeys( Iterator< Input > cmb_keys )
 	{
 		this.default_cmb_keys = ImmutableSet.copyOf( cmb_keys );
@@ -404,16 +412,19 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public ImmutableSet< Input > getDefaultCmbKeys() {
 		return this.default_cmb_keys;
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public ImmutableSet< Input > getCmbKeys() {
 		return this.current_cmb_keys;
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public void setKeyAndCmbKeys( Input key, Iterator< Input > cmb_keys )
 	{
 		this.setKey( key );
@@ -421,26 +432,31 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public void addPressCallback( Runnable callback ) {
 		this.press_callbacks.add( callback );
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public boolean removePressCallback( Runnable callback ) {
 		return this.press_callbacks.remove( callback );
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public void addReleaseCallback( Runnable callback ) {
 		this.release_callbacks.add( callback );
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public boolean removeReleaseCallback( Runnable callback ) {
 		return this.release_callbacks.remove( callback );
 	}
 	
 	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public final KeyBinding getKeyBinding()
 	{
 		final Object o = this;
