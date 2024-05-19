@@ -136,13 +136,13 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 		while ( itr.hasNext() )
 		{
 			final var km = itr.next();
-			final var cmb_keys = km.getCmbKeys();
-			if ( !ACTIVE_KEYS.containsAll( cmb_keys ) ) {
+			final var ctx = km.getKeyMapping().getKeyConflictContext();
+			if ( !ctx.isActive() ) {
 				continue;
 			}
 			
-			final var ctx = km.getKeyMapping().getKeyConflictContext();
-			if ( !ctx.isActive() ) {
+			final var cmb_keys = km.getCmbKeys();
+			if ( !ACTIVE_KEYS.containsAll( cmb_keys ) ) {
 				continue;
 			}
 			
