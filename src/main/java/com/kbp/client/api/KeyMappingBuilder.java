@@ -7,6 +7,7 @@ import com.mojang.blaze3d.platform.InputConstants.Key;
 import com.mojang.blaze3d.platform.InputConstants.Type;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyConflictContext;
 
@@ -27,6 +28,10 @@ public abstract class KeyMappingBuilder
 	protected Iterator< Key > cmb_keys = Collections.emptyIterator();
 	protected IKeyConflictContext conflict_context = KeyConflictContext.IN_GAME;
 	
+	/**
+	 * @see KBPMod#newBuilder(String)
+	 * @see KBPMod#newToggleableBuilder(String, BooleanSupplier)
+	 */
 	public KeyMappingBuilder() { }
 	
 	public KeyMappingBuilder withCategory( String category )
@@ -74,7 +79,7 @@ public abstract class KeyMappingBuilder
 	
 	/**
 	 * Remember to register the returned key mapping via
-	 * {@link net.minecraftforge.client.event.RegisterKeyMappingsEvent}. Use
+	 * {@link RegisterKeyMappingsEvent}. Use
 	 * {@link IPatchedKeyMapping#getKeyMapping()} to get corresponding vanilla
 	 * key mapping for registration.
 	 */
