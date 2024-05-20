@@ -5,6 +5,7 @@
 	"refmap": "mixins.kbp.refmap.json",
 	"mixins": [],
 	"client": [
+		"FMLClientHandlerMixin",
 		"GuiControlsMixin",
 		"GameSettingsMixin",
 		"KeyBindingMixin"

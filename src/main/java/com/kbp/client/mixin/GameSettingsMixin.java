@@ -1,12 +1,14 @@
 package com.kbp.client.mixin;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterators;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.kbp.client.IKeyBinding;
 import com.kbp.client.api.IPatchedKeyBinding;
+import com.mojang.realmsclient.util.Pair;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
@@ -77,13 +79,15 @@ public abstract class GameSettingsMixin
 		// It is really hard to inject original logic for saving the key \
 		// bindings. So instead, we do it in a separate file.
 		final JsonObject data = new JsonObject();
-		Arrays.stream( this.keyBindings ).forEach( kb -> {
-			final IKeyBinding ikb = ( IKeyBinding ) kb;
-			final JsonArray key_data = new JsonArray();
-			key_data.add( kb.getKeyCode() );
-			ikb.getCmbKeys().forEach( key_data::add );
-			data.add( kb.getKeyDescription(), key_data );
-		} );
+		Arrays.stream( this.keyBindings )
+			.map( kb -> {
+				final IKeyBinding ikb = ( IKeyBinding ) kb;
+				final JsonArray key_data = new JsonArray();
+				key_data.add( kb.getKeyCode() );
+				ikb.getCmbKeys().forEach( key_data::add );
+				return Pair.of( ikb.getSaveKey(), key_data );
+			} )
+			.forEachOrdered( p -> data.add( p.first(), p.second() ) );
 		
 		final String json_str = GSON.toJson( data );
 		try ( FileWriter out = new FileWriter( this.key_bindings_file ) ) {
@@ -125,22 +129,23 @@ public abstract class GameSettingsMixin
 			throw new RuntimeException( e );
 		}
 		
-		// Build a hashmap to speedup key binding lookup.
-		// KeyBinding.class does have such table already, but it is private.
-		final HashMap< String, IKeyBinding > lookup_table = new HashMap<>();
-		Arrays.stream( this.keyBindings ).forEach( kb -> lookup_table.put( kb.getKeyDescription(), ( IKeyBinding ) kb ) );
-		
-		data.entrySet().stream()
-		.filter( p -> lookup_table.containsKey( p.getKey() ) )
-		.forEach( p -> {
-			final IKeyBinding kb = lookup_table.get( p.getKey() );
-			final JsonArray key_data = p.getValue().getAsJsonArray();
-			final int key_code = key_data.get( 0 ).getAsInt();
-			final Iterator< Integer > cmb_keys = IntStream.range( 1, key_data.size() )
-				.mapToObj( key_data::get )
-				.map( JsonElement::getAsInt )
-				.iterator();
-			kb.setKeyAndCmbKeys( key_code, cmb_keys );
+		Arrays.stream( this.keyBindings ).forEach( kb -> {
+			final IKeyBinding ikb = ( IKeyBinding ) kb;
+			final JsonArray key_arr = data.getAsJsonArray( ikb.getSaveKey() );
+			if ( key_arr == null )
+			{
+				// For newly created shadow key bindings, they will not have \
+				// any corresponding save data, but vanilla will set them with \
+				// they target key binding's data, hence we need to create it \
+				// here to ensure correctness.
+				kb.setToDefault();
+				return;
+			}
+			
+			final Iterator< JsonElement > key_itr = key_arr.iterator();
+			final int key_code = key_itr.next().getAsInt();
+			final Iterator< Integer > cmb_keys = Iterators.transform( key_itr, JsonElement::getAsInt );
+			ikb.setKeyAndCmbKeys( key_code, ImmutableSet.copyOf( cmb_keys ) );
 		} );
 	}
 }

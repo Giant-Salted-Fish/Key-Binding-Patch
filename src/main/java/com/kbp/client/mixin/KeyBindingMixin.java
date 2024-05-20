@@ -2,7 +2,9 @@ package com.kbp.client.mixin;
 
 import com.google.common.collect.ImmutableSet;
 import com.kbp.client.IKeyBinding;
+import com.kbp.client.InputSignal;
 import com.kbp.client.api.IPatchedKeyBinding;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.settings.IKeyConflictContext;
@@ -20,12 +22,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.AbstractCollection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -35,23 +37,19 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	// >>> Shadow fields and methods <<<
 	@Shadow
 	@Final
-	private static Map< String, KeyBinding > KEYBIND_ARRAY;
-	
-	@Shadow
-	@Final
 	private static KeyBindingMap HASH;
 	
 	@Shadow
 	private boolean pressed;
-	
-	@Shadow
-	private int pressTime;
 	
 	@Shadow( remap = false )
 	private KeyModifier keyModifierDefault;
 	
 	@Shadow( remap = false )
 	private KeyModifier keyModifier;
+	
+	@Shadow
+	public abstract String getKeyDescription();
 	
 	@Shadow
 	public abstract int getKeyCode();
@@ -94,10 +92,7 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	private ImmutableSet< Integer > current_cmb_keys = ImmutableSet.of();
 	
 	@Unique
-	private final HashSet< Runnable > press_callbacks = new HashSet<>();
-	
-	@Unique
-	private final HashSet< Runnable > release_callbacks = new HashSet<>();
+	private InputSignal input_signal;
 	
 	
 	/**
@@ -109,7 +104,7 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	{
 		UPDATE_TABLE.getOrDefault( key, Collections.emptyList() ).stream()
 			.filter( kb -> kb.getKeyBinding().isKeyDown() )
-			.forEach( IKeyBinding::incrPressTime );
+			.forEachOrdered( IKeyBinding::incrPressTime );
 	}
 	
 	/**
@@ -181,7 +176,7 @@ public abstract class KeyBindingMixin implements IKeyBinding
 			
 			UPDATE_TABLE.getOrDefault( key, Collections.emptyList() ).stream()
 				.filter( kb -> kb.getKeyBinding().isKeyDown() )
-				.forEach( IPatchedKeyBinding::releaseKey );
+				.forEachOrdered( IPatchedKeyBinding::releaseKey );
 			return true;
 		} );
 	}
@@ -192,7 +187,7 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	 */
 	@Overwrite
 	public static void unPressAllKeys() {
-		KEYBIND_ARRAY.values().forEach( kb -> ( ( IKeyBinding ) kb ).releaseKey() );
+		UPDATE_TABLE.values().forEach( lst -> lst.forEach( IKeyBinding::resetKey ) );
 	}
 	
 	/**
@@ -204,9 +199,12 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	{
 		HASH.clearMap();
 		UPDATE_TABLE.clear();
-		KEYBIND_ARRAY.values().stream()
+		
+		final Minecraft mc = Minecraft.getMinecraft();
+		final GameSettings settings = mc.gameSettings;
+		Arrays.stream( settings.keyBindings )
 			.filter( kb -> kb.getKeyCode() != Keyboard.KEY_NONE )
-			.forEach( KeyBindingMixin::__regisToUpdateTable );
+			.forEachOrdered( KeyBindingMixin::__regisToUpdateTable );
 	}
 	
 	@Unique
@@ -231,6 +229,14 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	
 	
 	@Inject(
+		method = "<init>(Ljava/lang/String;ILjava/lang/String;)V",
+		at = @At( "RETURN" )
+	)
+	private void onNew( String description, int keyCode, String category, CallbackInfo ci ) {
+		this.input_signal = InputSignal.of( description );
+	}
+	
+	@Inject(
 		method = "<init>(Ljava/lang/String;Lnet/minecraftforge/client/settings/IKeyConflictContext;Lnet/minecraftforge/client/settings/KeyModifier;ILjava/lang/String;)V",
 		at = @At( "RETURN" )
 	)
@@ -240,8 +246,10 @@ public abstract class KeyBindingMixin implements IKeyBinding
 		KeyModifier keyModifier,
 		int keyCode,
 		String category,
-		CallbackInfo info
+		CallbackInfo ci
 	) {
+		this.input_signal = InputSignal.of( description );
+		
 		final ImmutableSet< Integer > cmb_keys = MODIFIER_2_CMB_KEYS.get( keyModifier );
 		this.default_cmb_keys = cmb_keys;
 		this.current_cmb_keys = cmb_keys;
@@ -257,7 +265,20 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	 */
 	@Overwrite
 	public boolean isKeyDown() {
-		return this.pressed;
+		return this.input_signal.active_count > 0;
+	}
+	
+	/**
+	 * @author Giant_Salted_Fish
+	 * @reason Patch logic.
+	 */
+	@Overwrite
+	public boolean isPressed()
+	{
+		final InputSignal input_signal = this.input_signal;
+		final boolean flag = input_signal.click_count > 0;
+		input_signal.click_count -= flag ? 1 : 0;
+		return flag;
 	}
 	
 	/**
@@ -281,7 +302,7 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	 */
 	@Overwrite( remap = false )
 	public void setKeyModifierAndCode( KeyModifier keyModifier, int keyCode ) {
-		this.setKeyAndCmbKeys( keyCode, MODIFIER_2_CMB_KEYS.get( keyModifier ).iterator() );
+		this.setKeyAndCmbKeys( keyCode, MODIFIER_2_CMB_KEYS.get( keyModifier ) );
 	}
 	
 	/**
@@ -290,7 +311,7 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	 */
 	@Overwrite( remap = false )
 	public void setToDefault() {
-		this.setKeyAndCmbKeys( this.getKeyCodeDefault(), this.getDefaultCmbKeys().iterator() );
+		this.setKeyAndCmbKeys( this.getKeyCodeDefault(), this.getDefaultCmbKeys() );
 	}
 	
 	/**
@@ -377,7 +398,7 @@ public abstract class KeyBindingMixin implements IKeyBinding
 		if ( !this.pressed )
 		{
 			this.pressed = true;
-			this.press_callbacks.forEach( Runnable::run );
+			this.input_signal.increaseActiveCount();
 		}
 	}
 	
@@ -388,22 +409,38 @@ public abstract class KeyBindingMixin implements IKeyBinding
 		if ( this.pressed )
 		{
 			this.pressed = false;
-			this.release_callbacks.forEach( Runnable::run );
+			this.input_signal.reduceActiveCount();
 		}
 	}
 	
 	@Override
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public final void incrPressTime() {
-		this.pressTime += 1;
+	public final void initDefaultCmbKeys( ImmutableSet< Integer > cmb_keys )
+	{
+		this.default_cmb_keys = cmb_keys;
+		this.current_cmb_keys = cmb_keys;
 	}
 	
 	@Override
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public final void initDefaultCmbKeys( Iterator< Integer > cmb_keys )
+	public String getSaveKey() {
+		return this.getKeyDescription();
+	}
+	
+	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
+	public final void incrPressTime() {
+		this.input_signal.click_count += 1;
+	}
+	
+	// Shadow functionality of KeyBinding#unpressKey().
+	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
+	public final void resetKey()
 	{
-		this.default_cmb_keys = ImmutableSet.copyOf( cmb_keys );
-		this.current_cmb_keys = this.default_cmb_keys;
+		this.releaseKey();
+		final InputSignal input_signal = this.input_signal;
+		input_signal.click_count -= input_signal.click_count > 0 ? 1 : 0;
 	}
 	
 	@Override
@@ -420,34 +457,34 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	
 	@Override
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public void setKeyAndCmbKeys( int key, Iterator< Integer > cmb_keys )
+	public void setKeyAndCmbKeys( int key, ImmutableSet< Integer > cmb_keys )
 	{
 		this.setKeyCode( key );
-		this.current_cmb_keys = ImmutableSet.copyOf( cmb_keys );
+		this.current_cmb_keys = cmb_keys;
 	}
 	
 	@Override
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public void addPressCallback( Runnable callback ) {
-		this.press_callbacks.add( callback );
+		this.input_signal.press_callbacks.add( callback );
 	}
 	
 	@Override
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public boolean removePressCallback( Runnable callback ) {
-		return this.press_callbacks.remove( callback );
+		return this.input_signal.press_callbacks.remove( callback );
 	}
 	
 	@Override
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public void addReleaseCallback( Runnable callback ) {
-		this.release_callbacks.add( callback );
+		this.input_signal.release_callbacks.add( callback );
 	}
 	
 	@Override
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public boolean removeReleaseCallback( Runnable callback ) {
-		return this.release_callbacks.remove( callback );
+		return this.input_signal.release_callbacks.remove( callback );
 	}
 	
 	@Override

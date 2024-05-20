@@ -30,7 +30,7 @@ public final class EarlyMixinInit implements IFMLLoadingPlugin, IEarlyMixinLoade
 	
 	@Override
 	public void injectData( Map< String, Object > data ) {
-	
+		// Pass.
 	}
 	
 	@Override

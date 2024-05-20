@@ -23,7 +23,7 @@ public interface IPatchedKeyBinding
 		throw new UnsupportedOperationException();
 	}
 	
-	default void setKeyAndCmbKeys( int key, Iterator< Integer > cmb_keys ) {
+	default void setKeyAndCmbKeys( int key, ImmutableSet< Integer > cmb_keys ) {
 		throw new UnsupportedOperationException();
 	}
 	

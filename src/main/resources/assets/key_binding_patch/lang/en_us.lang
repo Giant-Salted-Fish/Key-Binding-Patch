@@ -1,0 +1,4 @@
+kbp.config=Key Binding Patch Config
+kbp.config.tooltip=This is config for Key Binding Patch mod.
+kbp.config.shadow_key_bindings=Shadow Key Bindings
+kbp.config.shadow_key_bindings.tooltip=Shadow key bindings are replications of the required key binding. This brings the ability to have multiple key setups for a single functionality.

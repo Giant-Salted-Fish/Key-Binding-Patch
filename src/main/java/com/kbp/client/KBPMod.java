@@ -4,14 +4,19 @@ import com.kbp.client.api.IPatchedKeyBinding;
 import com.kbp.client.api.KeyBindingBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.Config;
+import net.minecraftforge.common.config.ConfigManager;
+import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.Arrays;
 import java.util.Optional;
 
 @Mod(
-	modid = "key_binding_patch",
-	version = "1.12.2-1.3.1.1",
+	modid = KBPMod.MODID,
+	version = "1.12.2-1.3.2.0",
 	clientSideOnly = true,
 	updateJSON = "https://raw.githubusercontent.com/Giant-Salted-Fish/Key-Binding-Patch/1.16.X/update.json",
 	acceptedMinecraftVersions = "[1.12,1.13)",
@@ -62,5 +67,27 @@ public final class KBPMod
 				);
 			}
 		};
+	}
+	
+	// >>> For Mod Setup <<<
+	static final String MODID = "key_binding_patch";
+	
+	private KBPMod()
+	{
+		MinecraftForge.EVENT_BUS.register( new Object() {
+			@SubscribeEvent
+			void _onConfigChanged( OnConfigChangedEvent evt )
+			{
+				if ( evt.getModID().equals( MODID ) ) {
+					ConfigManager.sync( MODID, Config.Type.INSTANCE );
+				}
+			}
+		} );
+	}
+	
+	@Mod.InstanceFactory
+	@SuppressWarnings( "InstantiationOfUtilityClass" )
+	private static KBPMod __create() {
+		return new KBPMod();
 	}
 }
