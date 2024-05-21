@@ -426,6 +426,10 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public void pressKey()
 	{
+		// Although our implementation can guarantee the #pressKey() will only \
+		// be called when the active state of the key is changed, we still \
+		// have to check before firing callbacks as #pressKey() is a public \
+		// method and can be called by any other mods.
 		if ( !this.pressed )
 		{
 			this.pressed = true;
