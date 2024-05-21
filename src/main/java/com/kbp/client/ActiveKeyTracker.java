@@ -31,12 +31,7 @@ public final class ActiveKeyTracker
 		return this.active_keys.isEmpty() ? Keyboard.KEY_NONE : this.active_keys.getFirst();
 	}
 	
-	public ImmutableSet< Integer > getCmbKeys()
-	{
-		return (
-			this.active_keys.isEmpty()
-			? ImmutableSet.of()
-			: ImmutableSet.copyOf( this.active_keys.stream().skip( 1 ).iterator() )
-		);
+	public ImmutableSet< Integer > getCmbKeys() {
+		return ImmutableSet.copyOf( this.active_keys.stream().skip( 1 ).iterator() );
 	}
 }

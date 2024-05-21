@@ -28,13 +28,19 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Mixin( KeyBinding.class )
 public abstract class KeyBindingMixin implements IKeyBinding
 {
 	// >>> Shadow fields and methods <<<
+	@Shadow
+	@Final
+	private static Map< String, KeyBinding > KEYBIND_ARRAY;
+	
 	@Shadow
 	@Final
 	private static KeyBindingMap HASH;
@@ -86,10 +92,10 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	
 	
 	@Unique
-	private ImmutableSet< Integer > default_cmb_keys = ImmutableSet.of();
+	private ImmutableSet< Integer > current_cmb_keys;
 	
 	@Unique
-	private ImmutableSet< Integer > current_cmb_keys = ImmutableSet.of();
+	private ImmutableSet< Integer > default_cmb_keys;
 	
 	@Unique
 	private InputSignal input_signal;
@@ -202,8 +208,16 @@ public abstract class KeyBindingMixin implements IKeyBinding
 		
 		final Minecraft mc = Minecraft.getMinecraft();
 		final GameSettings settings = mc.gameSettings;
-		Arrays.stream( settings.keyBindings )
-			.filter( kb -> kb.getKeyCode() != Keyboard.KEY_NONE )
+		// This will be called in GameSettings' constructor, hence it is \
+		// possible that settings is null here. If it is null, then shadow \
+		// key bindings have not been created yet, so safe to use KEYBIND_ARRAY.
+		final boolean settings_created = settings != null;
+		final Stream< KeyBinding > stream = (
+			settings_created
+			? Arrays.stream( settings.keyBindings )
+			: KEYBIND_ARRAY.values().stream()
+		);
+		stream.filter( kb -> kb.getKeyCode() != Keyboard.KEY_NONE )
 			.forEachOrdered( KeyBindingMixin::__regisToUpdateTable );
 	}
 	
@@ -232,8 +246,13 @@ public abstract class KeyBindingMixin implements IKeyBinding
 		method = "<init>(Ljava/lang/String;ILjava/lang/String;)V",
 		at = @At( "RETURN" )
 	)
-	private void onNew( String description, int keyCode, String category, CallbackInfo ci ) {
+	private void onNew( String description, int keyCode, String category, CallbackInfo ci )
+	{
 		this.input_signal = InputSignal.of( description );
+		
+		final ImmutableSet< Integer > cmb_keys = ImmutableSet.of();
+		this.default_cmb_keys = cmb_keys;
+		this.current_cmb_keys = cmb_keys;
 	}
 	
 	@Inject(
@@ -279,6 +298,18 @@ public abstract class KeyBindingMixin implements IKeyBinding
 		final boolean flag = input_signal.click_count > 0;
 		input_signal.click_count -= flag ? 1 : 0;
 		return flag;
+	}
+	
+	/**
+	 * @author Giant_Salted_Fish
+	 * @reason Patch logic.
+	 */
+	@Overwrite
+	private void unpressKey()
+	{
+		this.releaseKey();
+		final InputSignal input_signal = this.input_signal;
+		input_signal.click_count -= input_signal.click_count > 0 ? 1 : 0;
 	}
 	
 	/**
@@ -433,14 +464,10 @@ public abstract class KeyBindingMixin implements IKeyBinding
 		this.input_signal.click_count += 1;
 	}
 	
-	// Shadow functionality of KeyBinding#unpressKey().
 	@Override
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public final void resetKey()
-	{
-		this.releaseKey();
-		final InputSignal input_signal = this.input_signal;
-		input_signal.click_count -= input_signal.click_count > 0 ? 1 : 0;
+	public final void resetKey() {
+		this.unpressKey();
 	}
 	
 	@Override

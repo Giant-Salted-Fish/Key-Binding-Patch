@@ -42,18 +42,20 @@ public abstract class FMLClientHandlerMixin
 			.forEachOrdered( kb -> shadow_map.compute( kb, ( k, v ) -> v != null ? v + 1 : 1 ) );
 		
 		shadow_map.forEach( ( kb, cnt ) -> IntStream.range( 0, cnt )
-			.mapToObj( i -> new ShadowKeyBinding(
-				kb.getKeyDescription(),
-				kb.getKeyConflictContext(),
-				Keyboard.KEY_NONE,
-				ImmutableSet.of(),
-				kb.getKeyCategory()
-			) {
-				@Override
-				public String getSaveKey() {
-					return super.getSaveKey() + "_" + i;
+			.mapToObj( i -> (
+				new ShadowKeyBinding(
+					kb.getKeyDescription(),
+					kb.getKeyConflictContext(),
+					Keyboard.KEY_NONE,
+					ImmutableSet.of(),
+					kb.getKeyCategory()
+				) {
+					@Override
+					public String getSaveKey() {
+						return super.getSaveKey() + "_" + i;
+					}
 				}
-			} )
+			) )
 			.forEachOrdered( ClientRegistry::registerKeyBinding )
 		);
 	}
