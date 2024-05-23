@@ -2,17 +2,17 @@ package com.kbp.client;
 
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.Config.Comment;
-import net.minecraftforge.common.config.Config.LangKey;
 import net.minecraftforge.common.config.Config.RequiresMcRestart;
 
-@LangKey( "kbp.config" )
 @Config( modid = KBPMod.MODID )
-public final class ModConfig
+public final class KBPModConfig
 {
-	@Comment( "These shadow key bindings allow the duplication of " )
-	@LangKey( "kbp.config.shadow_key_bindings" )
+	@Comment( {
+		"Shadow key bindings are replications of the specified key binding.",
+		"This brings the ability to have multiple key setups for a single functionality."
+	} )
 	@RequiresMcRestart
 	public static String[] shadow_key_bindings = { };
 	
-	private ModConfig() { }
+	private KBPModConfig() { }
 }

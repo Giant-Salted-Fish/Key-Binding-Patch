@@ -2,6 +2,7 @@ package com.kbp.client;
 
 import com.kbp.client.api.IPatchedKeyBinding;
 import com.kbp.client.api.KeyBindingBuilder;
+import com.kbp.client.impl.PatchedKeyBinding;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.common.MinecraftForge;
@@ -20,10 +21,13 @@ import java.util.Optional;
 	clientSideOnly = true,
 	updateJSON = "https://raw.githubusercontent.com/Giant-Salted-Fish/Key-Binding-Patch/1.16.X/update.json",
 	acceptedMinecraftVersions = "[1.12,1.13)",
+	guiFactory = "com.kbp.client.gui.ConfigGuiFactory",
 	dependencies = "required:mixinbooter@[8.0,);"
 )
 public final class KBPMod
 {
+	public static final String MODID = "key_binding_patch";
+	
 	/**
 	 * You should use this to retrieve {@link IPatchedKeyBinding} interface from
 	 * {@link KeyBinding} instances because there is no guarantee that
@@ -69,9 +73,7 @@ public final class KBPMod
 		};
 	}
 	
-	// >>> For Mod Setup <<<
-	static final String MODID = "key_binding_patch";
-	
+	// >>> Mod Setup <<<
 	private KBPMod()
 	{
 		MinecraftForge.EVENT_BUS.register( new Object() {

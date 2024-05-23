@@ -1,9 +1,10 @@
 package com.kbp.client.mixin;
 
 import com.google.common.collect.ImmutableSet;
-import com.kbp.client.IKeyBinding;
-import com.kbp.client.InputSignal;
+import com.google.common.collect.Lists;
 import com.kbp.client.api.IPatchedKeyBinding;
+import com.kbp.client.impl.IKeyBinding;
+import com.kbp.client.impl.InputSignal;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
@@ -20,7 +21,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -210,14 +210,14 @@ public abstract class KeyBindingMixin implements IKeyBinding
 		final GameSettings settings = mc.gameSettings;
 		// This will be called in GameSettings' constructor, hence it is \
 		// possible that settings is null here. If it is null, then shadow \
-		// key bindings have not been created yet, so safe to use KEYBIND_ARRAY.
-		final boolean settings_created = settings != null;
-		final Stream< KeyBinding > stream = (
-			settings_created
+		// key bindings have not been created yet, so safe to use #KEYBIND_ARRAY.
+		final boolean is_settings_created = settings != null;
+		final Stream< KeyBinding > kb_stream = (
+			is_settings_created
 			? Arrays.stream( settings.keyBindings )
 			: KEYBIND_ARRAY.values().stream()
 		);
-		stream.filter( kb -> kb.getKeyCode() != Keyboard.KEY_NONE )
+		kb_stream.filter( kb -> kb.getKeyCode() != Keyboard.KEY_NONE )
 			.forEachOrdered( KeyBindingMixin::__regisToUpdateTable );
 	}
 	
@@ -227,14 +227,10 @@ public abstract class KeyBindingMixin implements IKeyBinding
 		final IKeyBinding ikb = ( IKeyBinding ) kb;
 		UPDATE_TABLE.compute( kb.getKeyCode(), ( k, lst ) -> {
 			final List< IKeyBinding > update_lst = lst != null ? lst : new ArrayList<>();
-			final List< Integer > priority_lst = update_lst.stream()
-				.map( IPatchedKeyBinding::getCmbKeys )
-				.map( AbstractCollection::size )
-				.collect( Collectors.toList() );
-			Collections.reverse( priority_lst );
+			final List< Integer > priority_lst = Lists.transform( update_lst, o -> o.getCmbKeys().size() );
 			
 			final int priority = ikb.getCmbKeys().size();
-			final int idx = Collections.binarySearch( priority_lst, priority );
+			final int idx = Collections.binarySearch( Lists.reverse( priority_lst ), priority );
 			final int insert_idx = update_lst.size() - ( idx < 0 ? -idx - 1 : idx );
 			update_lst.add( insert_idx, ikb );
 			return update_lst;
@@ -412,13 +408,10 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	@Overwrite( remap = false )
 	public String getDisplayName()
 	{
-		final String key = GameSettings.getKeyDisplayString( this.getKeyCode() );
 		return (
-			this.getCmbKeys().stream()
+			Stream.concat( this.getCmbKeys().stream(), Stream.of( this.getKeyCode() ) )
 			.map( GameSettings::getKeyDisplayString )
-			.reduce( ( s0, s1 ) -> s0 + " + " + s1 )
-			.map( s -> s + " + " + key )
-			.orElse( key )
+			.collect( Collectors.joining( " + " ) )
 		);
 	}
 	
@@ -458,12 +451,6 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	
 	@Override
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public String getSaveKey() {
-		return this.getKeyDescription();
-	}
-	
-	@Override
-	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public final void incrPressTime() {
 		this.input_signal.click_count += 1;
 	}
@@ -472,6 +459,18 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public final void resetKey() {
 		this.unpressKey();
+	}
+	
+	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
+	public String getSaveKey() {
+		return this.getKeyDescription();
+	}
+	
+	@Override
+	@SuppressWarnings( "AddedMixinMembersNamePattern" )
+	public boolean isShadowKeyBinding() {
+		return false;
 	}
 	
 	@Override

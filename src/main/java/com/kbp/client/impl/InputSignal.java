@@ -1,4 +1,4 @@
-package com.kbp.client;
+package com.kbp.client.impl;
 
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;

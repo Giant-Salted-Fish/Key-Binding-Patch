@@ -1,7 +1,7 @@
 package com.kbp.client.mixin;
 
-import com.kbp.client.ActiveKeyTracker;
-import com.kbp.client.IKeyBinding;
+import com.kbp.client.impl.ActiveKeyTracker;
+import com.kbp.client.impl.IKeyBinding;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiControls;
 import net.minecraft.client.gui.GuiKeyBindingList;
@@ -104,9 +104,9 @@ public abstract class GuiControlsMixin extends GuiScreen
 	@Unique
 	private void __updateSelectedKeyBinding()
 	{
-		final IKeyBinding kb = ( IKeyBinding ) this.buttonId;
+		final IKeyBinding ikb = ( IKeyBinding ) this.buttonId;
 		final int key = this.key_tracker.getKey();
-		kb.setKeyAndCmbKeys( key, this.key_tracker.getCmbKeys() );
+		ikb.setKeyAndCmbKeys( key, this.key_tracker.getCmbKeys() );
 		this.options.setOptionKeyBinding( this.buttonId, key );
 		KeyBinding.resetKeyBindingArrayAndHash();
 		this.buttonId = null;

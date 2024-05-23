@@ -1,4 +1,4 @@
-package com.kbp.client;
+package com.kbp.client.impl;
 
 import com.google.common.collect.ImmutableSet;
 import com.kbp.client.api.IPatchedKeyBinding;
@@ -16,15 +16,19 @@ public interface IKeyBinding extends IPatchedKeyBinding
 		throw new UnsupportedOperationException();
 	}
 	
-	default String getSaveKey() {
-		throw new UnsupportedOperationException();
-	}
-	
 	default void incrPressTime() {
 		throw new UnsupportedOperationException();
 	}
 	
 	default void resetKey() {
+		throw new UnsupportedOperationException();
+	}
+	
+	default String getSaveKey() {
+		throw new UnsupportedOperationException();
+	}
+	
+	default boolean isShadowKeyBinding() {
 		throw new UnsupportedOperationException();
 	}
 }

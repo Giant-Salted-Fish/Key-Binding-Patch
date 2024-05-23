@@ -99,7 +99,6 @@ mixin {
 	// MixinGradle Settings.
 	// See https://github.com/SpongePowered/Mixin/wiki/Mixins-on-Minecraft-Forge
 	add sourceSets.main, 'mixins.kbp.refmap.json'
-//	config 'mixins.kbp.json'
 
 //	debug.verbose = true
 //	debug.export = true

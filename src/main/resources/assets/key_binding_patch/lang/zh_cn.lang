@@ -1,4 +1,3 @@
-kbp.config=按键绑定补丁配置
-kbp.config.tooltip=这是按键绑定补丁的配置文件
-kbp.config.shadow_key_bindings=按键绑定拷贝
-kbp.config.shadow_key_bindings.tooltip=按键绑定拷贝允许你复制指定的按键绑定，这样便可以为对应功能设置多个触发按键配置。
+kbp.gui.config_title=按键绑定拷贝
+kbp.gui.cancel=取消
+kbp.gui.save=保存

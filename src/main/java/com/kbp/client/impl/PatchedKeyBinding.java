@@ -1,6 +1,7 @@
-package com.kbp.client;
+package com.kbp.client.impl;
 
 import com.google.common.collect.ImmutableSet;
+import com.kbp.client.KBPMod;
 import com.kbp.client.api.IPatchedKeyBinding;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.settings.IKeyConflictContext;

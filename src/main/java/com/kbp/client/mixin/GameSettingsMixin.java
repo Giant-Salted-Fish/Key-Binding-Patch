@@ -1,8 +1,8 @@
 package com.kbp.client.mixin;
 
 import com.google.common.collect.ImmutableSet;
-import com.kbp.client.IKeyBinding;
 import com.kbp.client.api.IPatchedKeyBinding;
+import com.kbp.client.impl.IKeyBinding;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.nbt.NBTTagCompound;
@@ -140,7 +140,7 @@ public abstract class GameSettingsMixin
 	) {
 		final String save_key = s1.substring( 4 );
 		Arrays.stream( this.keyBindings )
-			.map( kb -> ( IKeyBinding ) kb )
+			.map( IKeyBinding.class::cast )
 			.filter( ikb -> ikb.getSaveKey().equals( save_key ) )
 			.forEach( ikb -> {
 				final String[] split = s2.split( ":" );

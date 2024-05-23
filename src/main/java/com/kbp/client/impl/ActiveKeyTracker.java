@@ -1,4 +1,4 @@
-package com.kbp.client;
+package com.kbp.client.impl;
 
 import com.google.common.collect.ImmutableSet;
 import net.minecraftforge.fml.relauncher.Side;
