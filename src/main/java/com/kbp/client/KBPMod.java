@@ -2,6 +2,9 @@ package com.kbp.client;
 
 import com.kbp.client.api.IPatchedKeyBinding;
 import com.kbp.client.api.KeyBindingBuilder;
+import com.kbp.client.gui.KBPConfigScreen;
+import com.kbp.client.impl.PatchedKeyBinding;
+import com.kbp.client.impl.PatchedToggleableKeyBinding;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
@@ -9,6 +12,7 @@ import net.minecraft.client.util.InputMappings.Input;
 import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig.Type;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
@@ -19,19 +23,6 @@ import java.util.function.BooleanSupplier;
 @Mod( "key_binding_patch" )
 public final class KBPMod
 {
-	public KBPMod()
-	{
-		// Make sure the mod being absent on the other network side does not \
-		// cause the client to display the server as incompatible.
-		ModLoadingContext.get().registerExtensionPoint(
-			ExtensionPoint.DISPLAYTEST,
-			() -> Pair.of(
-				() -> "This is a client only mod.",
-				( remote_version_string, network_bool ) -> network_bool
-			)
-		);
-	}
-	
 	/**
 	 * You should use this to retrieve {@link IPatchedKeyBinding} interface from
 	 * {@link KeyBinding} instances because there is no guarantee that
@@ -109,5 +100,28 @@ public final class KBPMod
 				return tkb;
 			}
 		};
+	}
+	
+	
+	// >>> Mod Setup <<<
+	public KBPMod()
+	{
+		// Make sure the mod being absent on the other network side does not \
+		// cause the client to display the server as incompatible.
+		final ModLoadingContext load_ctx = ModLoadingContext.get();
+		load_ctx.registerExtensionPoint(
+			ExtensionPoint.DISPLAYTEST,
+			() -> Pair.of(
+				() -> "This is a client only mod.",
+				( remote_version_string, network_bool ) -> network_bool
+			)
+		);
+		
+		// Setup mod config settings.
+		load_ctx.registerConfig( Type.CLIENT, KBPModConfig.CONFIG_SPEC );
+		load_ctx.registerExtensionPoint(
+			ExtensionPoint.CONFIGGUIFACTORY,
+			() -> ( mc, screen ) -> new KBPConfigScreen( screen )
+		);
 	}
 }

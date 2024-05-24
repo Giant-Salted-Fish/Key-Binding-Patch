@@ -1,7 +1,7 @@
 package com.kbp.client.mixin;
 
-import com.kbp.client.ActiveInputTracker;
-import com.kbp.client.IKeyBinding;
+import com.kbp.client.impl.ActiveInputTracker;
+import com.kbp.client.impl.IKeyBinding;
 import net.minecraft.client.GameSettings;
 import net.minecraft.client.gui.screen.ControlsScreen;
 import net.minecraft.client.gui.screen.Screen;

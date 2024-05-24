@@ -7,8 +7,6 @@ import net.minecraft.client.util.InputMappings.Input;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.util.Iterator;
-
 /**
  * @see KBPMod#getPatched(KeyBinding)
  * @see KBPMod#findByName(String)
@@ -24,7 +22,7 @@ public interface IPatchedKeyBinding
 		throw new UnsupportedOperationException();
 	}
 	
-	default void setKeyAndCmbKeys( Input key, Iterator< Input > cmb_keys ) {
+	default void setKeyAndCmbKeys( Input key, ImmutableSet< Input > cmb_keys ) {
 		throw new UnsupportedOperationException();
 	}
 	

@@ -1,6 +1,6 @@
 package com.kbp.client.api;
 
-import com.google.common.collect.Iterators;
+import com.google.common.collect.ImmutableSet;
 import com.kbp.client.KBPMod;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.client.util.InputMappings.Input;
@@ -12,8 +12,6 @@ import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.function.BooleanSupplier;
 
 /**
@@ -25,7 +23,7 @@ public abstract class KeyBindingBuilder
 {
 	protected String category = "key.categories.gameplay";
 	protected Input key = InputMappings.UNKNOWN;
-	protected Iterator< Input > cmb_keys = Collections.emptyIterator();
+	protected ImmutableSet< Input > cmb_keys = ImmutableSet.of();
 	protected IKeyConflictContext conflict_context = KeyConflictContext.IN_GAME;
 	
 	/**
@@ -60,14 +58,17 @@ public abstract class KeyBindingBuilder
 	
 	public KeyBindingBuilder withCmbKeys( Input... cmb_keys )
 	{
-		this.cmb_keys = Iterators.forArray( cmb_keys );
+		this.cmb_keys = ImmutableSet.copyOf( cmb_keys );
 		return this;
 	}
 	
 	public KeyBindingBuilder withKeyboardCmbKeys( int... cmb_keys )
 	{
-		this.cmb_keys = Arrays.stream( cmb_keys )
-			.mapToObj( Type.KEYSYM::getOrCreate ).iterator();
+		this.cmb_keys = (
+			Arrays.stream( cmb_keys )
+			.mapToObj( Type.KEYSYM::getOrCreate )
+			.collect( ImmutableSet.toImmutableSet() )
+		);
 		return this;
 	}
 	

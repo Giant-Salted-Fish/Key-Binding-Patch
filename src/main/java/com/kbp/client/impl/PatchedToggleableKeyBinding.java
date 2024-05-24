@@ -1,5 +1,7 @@
-package com.kbp.client;
+package com.kbp.client.impl;
 
+import com.google.common.collect.ImmutableSet;
+import com.kbp.client.KBPMod;
 import com.kbp.client.api.IPatchedKeyBinding;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.settings.ToggleableKeyBinding;
@@ -7,7 +9,6 @@ import net.minecraft.client.util.InputMappings.Input;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.util.Iterator;
 import java.util.function.BooleanSupplier;
 
 /**
@@ -20,7 +21,7 @@ public class PatchedToggleableKeyBinding extends ToggleableKeyBinding implements
 	public PatchedToggleableKeyBinding(
 		String description,
 		int key_code,
-		Iterator< Input > cmb_keys,
+		ImmutableSet< Input > cmb_keys,
 		String category,
 		BooleanSupplier toggle_controller
 	) {
@@ -32,6 +33,6 @@ public class PatchedToggleableKeyBinding extends ToggleableKeyBinding implements
 	
 	@Override
 	public KeyBinding getKeyBinding() {
-		return super.getKeyBinding();
+		return this;
 	}
 }

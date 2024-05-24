@@ -1,12 +1,11 @@
-package com.kbp.client;
+package com.kbp.client.impl;
 
+import com.google.common.collect.ImmutableSet;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.client.util.InputMappings.Input;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 @OnlyIn( Dist.CLIENT )
@@ -33,12 +32,7 @@ public final class ActiveInputTracker
 		return this.active_inputs.isEmpty() ? InputMappings.UNKNOWN : this.active_inputs.getFirst();
 	}
 	
-	public Iterator< Input > getCmbKeys()
-	{
-		return (
-			this.active_inputs.isEmpty()
-			? Collections.emptyIterator()
-			: this.active_inputs.stream().skip( 1 ).iterator()
-		);
+	public ImmutableSet< Input > getCmbKeys() {
+		return ImmutableSet.copyOf( this.active_inputs.stream().skip( 1 ).iterator() );
 	}
 }

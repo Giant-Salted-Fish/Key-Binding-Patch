@@ -1,13 +1,13 @@
-package com.kbp.client;
+package com.kbp.client.impl;
 
+import com.google.common.collect.ImmutableSet;
+import com.kbp.client.KBPMod;
 import com.kbp.client.api.IPatchedKeyBinding;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings.Input;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.settings.IKeyConflictContext;
-
-import java.util.Iterator;
 
 /**
  * Use {@link KBPMod#newBuilder(String)} if possible as this implementation is
@@ -20,7 +20,7 @@ public class PatchedKeyBinding extends KeyBinding implements IPatchedKeyBinding
 		String description,
 		IKeyConflictContext key_conflict_context,
 		Input key,
-		Iterator< Input > cmb_keys,
+		ImmutableSet< Input > cmb_keys,
 		String category
 	) {
 		super( description, key_conflict_context, key, category );
@@ -31,6 +31,6 @@ public class PatchedKeyBinding extends KeyBinding implements IPatchedKeyBinding
 	
 	@Override
 	public KeyBinding getKeyBinding() {
-		return super.getKeyBinding();
+		return this;
 	}
 }

@@ -5,6 +5,7 @@
 	"refmap": "mixins.kbp.refmap.json",
 	"mixins": [],
 	"client": [
+		"ClientModLoaderMixin",
 		"ControlsScreenMixin",
 		"GameSettingsMixin",
 		"KeyBindingMixin",
