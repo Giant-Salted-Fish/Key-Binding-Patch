@@ -1,7 +1,7 @@
 package com.kbp.client.mixin;
 
-import com.kbp.client.ActiveKeyTracker;
-import com.kbp.client.IKeyMapping;
+import com.kbp.client.impl.ActiveKeyTracker;
+import com.kbp.client.impl.IKeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.Util;
@@ -107,9 +107,9 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 	@Unique
 	private void __updateSelectedKeyBinding()
 	{
-		final var km = ( IKeyMapping ) this.shadow_selected_key;
+		final var ikm = ( IKeyMapping ) this.shadow_selected_key;
 		final var key = this.key_tracker.getKey();
-		km.setKeyAndCmbKeys( key, this.key_tracker.getCmbKeys() );
+		ikm.setKeyAndCmbKeys( key, this.key_tracker.getCmbKeys() );
 		this.options.setKey( this.shadow_selected_key, key );
 		
 		this.shadow_selected_key = null;

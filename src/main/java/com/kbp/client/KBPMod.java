@@ -2,15 +2,20 @@ package com.kbp.client;
 
 import com.kbp.client.api.IPatchedKeyMapping;
 import com.kbp.client.api.KeyMappingBuilder;
+import com.kbp.client.gui.KBPConfigScreen;
+import com.kbp.client.impl.PatchedKeyMapping;
+import com.kbp.client.impl.PatchedToggleableKeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.ConfigGuiHandler.ConfigGuiFactory;
 import net.minecraftforge.fml.IExtensionPoint.DisplayTest;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig.Type;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
@@ -18,19 +23,6 @@ import java.util.function.BooleanSupplier;
 @Mod( "key_binding_patch" )
 public final class KBPMod
 {
-	public KBPMod()
-	{
-		// Make sure the mod being absent on the other network side does not \
-		// cause the client to display the server as incompatible.
-		ModLoadingContext.get().registerExtensionPoint(
-			DisplayTest.class,
-			() -> new DisplayTest(
-				() -> "This is a client only mod.",
-				( remote_version_string, network_bool ) -> network_bool
-			)
-		);
-	}
-	
 	/**
 	 * Use should use this to retrieve {@link IPatchedKeyMapping} interface from
 	 * {@link KeyMapping} instances because there is no guarantee that
@@ -98,8 +90,8 @@ public final class KBPMod
 					this.category,
 					toggle_controller
 				) {
+					@NotNull
 					@Override
-					@Nonnull
 					public Key getDefaultKey() {
 						return default_key;
 					}
@@ -108,5 +100,28 @@ public final class KBPMod
 				return tkm;
 			}
 		};
+	}
+	
+	
+	// >>> Mod Setup <<<
+	public KBPMod()
+	{
+		// Make sure the mod being absent on the other network side does not \
+		// cause the client to display the server as incompatible.
+		final var load_ctx = ModLoadingContext.get();
+		load_ctx.registerExtensionPoint(
+			DisplayTest.class,
+			() -> new DisplayTest(
+				() -> "This is a client only mod.",
+				( remote_version_string, network_bool ) -> network_bool
+			)
+		);
+		
+		// Setup mod config settings.
+		load_ctx.registerConfig( Type.CLIENT, KBPModConfig.CONFIG_SPEC );
+		load_ctx.registerExtensionPoint(
+			ConfigGuiFactory.class,
+			() -> new ConfigGuiFactory( ( mc, screen ) -> new KBPConfigScreen( screen ) )
+		);
 	}
 }

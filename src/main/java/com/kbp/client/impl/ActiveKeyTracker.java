@@ -1,12 +1,11 @@
-package com.kbp.client;
+package com.kbp.client.impl;
 
+import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 @OnlyIn( Dist.CLIENT )
@@ -33,12 +32,7 @@ public final class ActiveKeyTracker
 		return this.active_keys.isEmpty() ? InputConstants.UNKNOWN : this.active_keys.getFirst();
 	}
 	
-	public Iterator< Key > getCmbKeys()
-	{
-		return (
-			this.active_keys.isEmpty()
-			? Collections.emptyIterator()
-			: this.active_keys.stream().skip( 1 ).iterator()
-		);
+	public ImmutableSet< Key > getCmbKeys() {
+		return ImmutableSet.copyOf( this.active_keys.stream().skip( 1 ).iterator() );
 	}
 }

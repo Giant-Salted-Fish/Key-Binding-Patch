@@ -1,12 +1,13 @@
-package com.kbp.client;
+package com.kbp.client.impl;
 
+import com.google.common.collect.ImmutableSet;
+import com.kbp.client.KBPMod;
 import com.kbp.client.api.IPatchedKeyMapping;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.client.ToggleKeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.util.Iterator;
 import java.util.function.BooleanSupplier;
 
 /**
@@ -19,7 +20,7 @@ public class PatchedToggleableKeyMapping extends ToggleKeyMapping implements IPa
 	public PatchedToggleableKeyMapping(
 		String description,
 		int key_code,
-		Iterator< Key > cmb_keys,
+		ImmutableSet< Key > cmb_keys,
 		String category,
 		BooleanSupplier toggle_controller
 	) {
