@@ -21,6 +21,9 @@ import java.util.stream.IntStream;
 @Mixin( ClientModLoader.class )
 public abstract class ClientModLoaderMixin
 {
+	@Unique
+	private static boolean is_shadow_created = false;
+	
 	@Inject(
 		method = "finishModLoading",
 		at = @At(
@@ -34,7 +37,12 @@ public abstract class ClientModLoaderMixin
 		Executor parallelExecutor,
 		CallbackInfo ci
 	) {
+		if ( is_shadow_created ) {
+			return;
+		}
+		
 		syncExecutor.execute( ClientModLoaderMixin::__createShadowKeyBindings );
+		is_shadow_created = true;
 	}
 	
 	@Unique
