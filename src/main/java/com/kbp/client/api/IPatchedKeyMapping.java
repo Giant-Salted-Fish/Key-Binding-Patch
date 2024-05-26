@@ -7,8 +7,6 @@ import net.minecraft.client.KeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.util.Iterator;
-
 /**
  * @see KBPMod#getPatched(KeyMapping)
  * @see KBPMod#findByName(String)
@@ -24,7 +22,7 @@ public interface IPatchedKeyMapping
 		throw new UnsupportedOperationException();
 	}
 	
-	default void setKeyAndCmbKeys( Key key, Iterator< Key > cmb_keys ) {
+	default void setKeyAndCmbKeys( Key key, ImmutableSet< Key > cmb_keys ) {
 		throw new UnsupportedOperationException();
 	}
 	

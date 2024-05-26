@@ -1,0 +1,8 @@
+{
+	"kbp.gui.config_title": "按键绑定拷贝",
+	"kbp.gui.cancel": "取消",
+	"kbp.gui.save": "保存",
+	"kbp.gui.alert_title": "注意！",
+	"kbp.gui.alert_message": "你需要重启游戏来使这些修改生效",
+	"kbp.gui.alert_confirm": "我已知晓"
+}

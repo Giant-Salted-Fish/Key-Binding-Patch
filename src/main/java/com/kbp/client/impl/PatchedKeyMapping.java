@@ -1,13 +1,13 @@
-package com.kbp.client;
+package com.kbp.client.impl;
 
+import com.google.common.collect.ImmutableSet;
+import com.kbp.client.KBPMod;
 import com.kbp.client.api.IPatchedKeyMapping;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.client.KeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.settings.IKeyConflictContext;
-
-import java.util.Iterator;
 
 /**
  * Use {@link KBPMod#newBuilder(String)} if possible as this implementation is
@@ -20,7 +20,7 @@ public class PatchedKeyMapping extends KeyMapping implements IPatchedKeyMapping
 		String description,
 		IKeyConflictContext key_conflict_context,
 		Key key,
-		Iterator< Key > cmb_keys,
+		ImmutableSet< Key > cmb_keys,
 		String category
 	) {
 		super( description, key_conflict_context, key, category );
