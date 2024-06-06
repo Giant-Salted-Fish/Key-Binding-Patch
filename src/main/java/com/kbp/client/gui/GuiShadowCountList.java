@@ -10,6 +10,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiListExtended;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -22,8 +23,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static com.kbp.client.gui.ConfigGuiScreen.RGB;
 
 @SideOnly( Side.CLIENT )
 final class GuiShadowCountList extends GuiListExtended
@@ -154,7 +153,7 @@ final class GuiShadowCountList extends GuiListExtended
 			final FontRenderer font_renderer = mc.fontRenderer;
 			final int pos_x = GuiShadowCountList.this.parent_screen.width / 2 - this.label_width / 2;
 			final int pos_y = y + slotHeight - font_renderer.FONT_HEIGHT - 1;
-			font_renderer.drawString( this.label_text, pos_x, pos_y, RGB( 255, 255, 255 ) );
+			font_renderer.drawString( this.label_text, pos_x, pos_y, MathHelper.rgb( 255, 255, 255 ) );
 		}
 		
 		@Override
@@ -215,7 +214,7 @@ final class GuiShadowCountList extends GuiListExtended
 			final Minecraft mc = GuiShadowCountList.this.mc;
 			final int pos_x = x + 90 - GuiShadowCountList.this.max_label_width;
 			final int pos_y = y + slotHeight / 2 - mc.fontRenderer.FONT_HEIGHT / 2;
-			mc.fontRenderer.drawString( this.label_text, pos_x, pos_y, RGB( 255, 255, 255 ) );
+			mc.fontRenderer.drawString( this.label_text, pos_x, pos_y, MathHelper.rgb( 255, 255, 255 ) );
 			
 			final int count = this.__getShadowCount();
 			final GuiButton rcb = this.reduce_count_btn;

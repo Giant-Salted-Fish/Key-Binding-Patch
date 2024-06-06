@@ -4,6 +4,7 @@ import com.kbp.client.KBPMod;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.config.GuiMessageDialog;
@@ -116,18 +117,8 @@ final class ConfigGuiScreen extends GuiScreen
 	{
 		this.drawDefaultBackground();
 		this.shadow_count_list.drawScreen( mouseX, mouseY, partialTicks );
-		this.drawCenteredString( this.fontRenderer, this.title, this.width / 2, 8, RGB( 255, 255, 255 ) );
+		this.drawCenteredString( this.fontRenderer, this.title, this.width / 2, 8, MathHelper.rgb( 255, 255, 255 ) );
 		
 		super.drawScreen( mouseX, mouseY, partialTicks );
-	}
-	
-	
-	// >>> Utility Function <<<
-	static int RGB( int red, int green, int blue )
-	{
-		assert red >= 0 && red <= 255;
-		assert green >= 0 && green <= 255;
-		assert blue >= 0 && blue <= 255;
-		return ( red << 16 ) | ( green ) | ( blue << 8 );
 	}
 }
