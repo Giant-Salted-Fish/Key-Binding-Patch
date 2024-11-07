@@ -16,14 +16,6 @@ public interface IKeyBinding extends IPatchedKeyBinding
 		throw new UnsupportedOperationException();
 	}
 	
-	default void incrPressTime() {
-		throw new UnsupportedOperationException();
-	}
-	
-	default void resetKey() {
-		throw new UnsupportedOperationException();
-	}
-	
 	default String getSaveKey() {
 		throw new UnsupportedOperationException();
 	}

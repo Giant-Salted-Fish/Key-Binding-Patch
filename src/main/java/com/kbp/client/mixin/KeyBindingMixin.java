@@ -36,7 +36,7 @@ import java.util.stream.Stream;
 @Mixin( KeyBinding.class )
 public abstract class KeyBindingMixin implements IKeyBinding
 {
-	// >>> Shadow fields and methods <<<
+	// >>> Shadow Fields and Methods <<<
 	@Shadow
 	@Final
 	private static Map< String, KeyBinding > KEYBIND_ARRAY;
@@ -108,9 +108,12 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	@Overwrite
 	public static void onTick( int key )
 	{
-		UPDATE_TABLE.getOrDefault( key, Collections.emptyList() ).stream()
-			.filter( kb -> kb.getKeyBinding().isKeyDown() )
-			.forEachOrdered( IKeyBinding::incrPressTime );
+		UPDATE_TABLE.getOrDefault( key, Collections.emptyList() ).forEach( ikb -> {
+			final KeyBindingMixin kb = ( KeyBindingMixin ) ikb;
+			if ( kb.isKeyDown() ) {
+				kb.input_signal.click_count += 1;
+			}
+		} );
 	}
 	
 	/**
@@ -192,8 +195,12 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	 * @reason Patch logic.
 	 */
 	@Overwrite
-	public static void unPressAllKeys() {
-		UPDATE_TABLE.values().forEach( lst -> lst.forEach( IKeyBinding::resetKey ) );
+	public static void unPressAllKeys()
+	{
+		UPDATE_TABLE.values().stream().flatMap( List::stream ).forEachOrdered( ikb -> {
+			final KeyBindingMixin kb = ( KeyBindingMixin ) ikb;
+			kb.unpressKey();
+		} );
 	}
 	
 	/**
@@ -447,18 +454,6 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	{
 		this.default_cmb_keys = cmb_keys;
 		this.current_cmb_keys = cmb_keys;
-	}
-	
-	@Override
-	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public final void incrPressTime() {
-		this.input_signal.click_count += 1;
-	}
-	
-	@Override
-	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public final void resetKey() {
-		this.unpressKey();
 	}
 	
 	@Override

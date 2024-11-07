@@ -14,5 +14,7 @@ public final class KBPModConfig
 	@RequiresMcRestart
 	public static String[] shadow_key_bindings = { };
 	
-	private KBPModConfig() { }
+	
+	private KBPModConfig() {
+	}
 }

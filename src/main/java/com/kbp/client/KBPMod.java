@@ -5,11 +5,11 @@ import com.kbp.client.api.KeyBindingBuilder;
 import com.kbp.client.impl.PatchedKeyBinding;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.Arrays;
@@ -24,6 +24,7 @@ import java.util.Optional;
 	guiFactory = "com.kbp.client.gui.ConfigGuiFactory",
 	dependencies = "required:mixinbooter@[8.0,);"
 )
+@EventBusSubscriber
 public final class KBPMod
 {
 	public static final String MODID = "key_binding_patch";
@@ -73,23 +74,22 @@ public final class KBPMod
 		};
 	}
 	
-	// >>> Mod Setup <<<
-	private KBPMod()
+	
+	// Internal implementations that should not be accessed by other mods.
+	@SubscribeEvent
+	static void _onConfigChanged( OnConfigChangedEvent evt )
 	{
-		MinecraftForge.EVENT_BUS.register( new Object() {
-			@SubscribeEvent
-			void _onConfigChanged( OnConfigChangedEvent evt )
-			{
-				if ( evt.getModID().equals( MODID ) ) {
-					ConfigManager.sync( MODID, Config.Type.INSTANCE );
-				}
-			}
-		} );
+		if ( evt.getModID().equals( MODID ) ) {
+			ConfigManager.sync( MODID, Config.Type.INSTANCE );
+		}
 	}
 	
 	@Mod.InstanceFactory
 	@SuppressWarnings( "InstantiationOfUtilityClass" )
 	private static KBPMod __create() {
 		return new KBPMod();
+	}
+	
+	private KBPMod() {
 	}
 }
