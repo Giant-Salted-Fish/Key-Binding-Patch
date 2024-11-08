@@ -1,16 +1,19 @@
 package com.kbp.client;
 
+import com.google.common.collect.ImmutableSet;
 import com.kbp.client.api.IPatchedKeyBinding;
 import com.kbp.client.api.KeyBindingBuilder;
 import com.kbp.client.impl.PatchedKeyBinding;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.lwjgl.input.Keyboard;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -72,6 +75,21 @@ public final class KBPMod
 				);
 			}
 		};
+	}
+	
+	private static final ImmutableSet< Integer > CMB_CTRL = ImmutableSet.of( Keyboard.KEY_LCONTROL );
+	private static final ImmutableSet< Integer > CMB_SHIFT = ImmutableSet.of( Keyboard.KEY_LSHIFT );
+	private static final ImmutableSet< Integer > CMB_ALT = ImmutableSet.of( Keyboard.KEY_LMENU );
+	public static ImmutableSet< Integer > getCmbKeySet( KeyModifier modifier )
+	{
+		switch ( modifier )
+		{
+		case CONTROL: return CMB_CTRL;
+		case SHIFT: return CMB_SHIFT;
+		case ALT: return CMB_ALT;
+		case NONE: return ImmutableSet.of();
+		}
+		throw new IllegalArgumentException();
 	}
 	
 	

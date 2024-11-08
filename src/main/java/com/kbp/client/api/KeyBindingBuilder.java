@@ -49,6 +49,12 @@ public abstract class KeyBindingBuilder
 		return this;
 	}
 	
+	public KeyBindingBuilder withCmbKeys( ImmutableSet< Integer > cmb_keys )
+	{
+		this.cmb_keys = cmb_keys;
+		return this;
+	}
+	
 	public KeyBindingBuilder withConflictContext( IKeyConflictContext context )
 	{
 		this.conflict_context = context;

@@ -2,6 +2,7 @@ package com.kbp.client.mixin;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.kbp.client.KBPMod;
 import com.kbp.client.api.IPatchedKeyBinding;
 import com.kbp.client.impl.IKeyBinding;
 import com.kbp.client.impl.InputSignal;
@@ -29,7 +30,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -71,19 +71,6 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	
 	
 	// >>> Unique fields <<<
-	@Unique
-	private static final HashMap< KeyModifier, ImmutableSet< Integer > >
-		MODIFIER_2_CMB_KEYS = new HashMap<>();
-	static
-	{
-		final BiConsumer< KeyModifier, Integer > adder = ( modifier, key_code ) ->
-			MODIFIER_2_CMB_KEYS.put( modifier, ImmutableSet.of( key_code ) );
-		adder.accept( KeyModifier.CONTROL, Keyboard.KEY_LCONTROL );
-		adder.accept( KeyModifier.SHIFT, Keyboard.KEY_LSHIFT );
-		adder.accept( KeyModifier.ALT, Keyboard.KEY_LMENU );
-		MODIFIER_2_CMB_KEYS.put( KeyModifier.NONE, ImmutableSet.of() );
-	}
-	
 	@Unique
 	private static final HashMap< Integer, List< IKeyBinding > > UPDATE_TABLE = new HashMap<>();
 	
@@ -272,7 +259,7 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	) {
 		this.input_signal = InputSignal.of( description );
 		
-		final ImmutableSet< Integer > cmb_keys = MODIFIER_2_CMB_KEYS.get( keyModifier );
+		final ImmutableSet< Integer > cmb_keys = KBPMod.getCmbKeySet( keyModifier );
 		this.default_cmb_keys = cmb_keys;
 		this.current_cmb_keys = cmb_keys;
 		
@@ -336,7 +323,7 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	 */
 	@Overwrite( remap = false )
 	public void setKeyModifierAndCode( KeyModifier keyModifier, int keyCode ) {
-		this.setKeyAndCmbKeys( keyCode, MODIFIER_2_CMB_KEYS.get( keyModifier ) );
+		this.setKeyAndCmbKeys( keyCode, KBPMod.getCmbKeySet( keyModifier ) );
 	}
 	
 	/**
