@@ -2,7 +2,6 @@ package com.kbp.client.impl;
 
 import com.google.common.collect.ImmutableSet;
 import com.kbp.client.KBPMod;
-import com.kbp.client.api.IPatchedKeyBinding;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.fml.relauncher.Side;
@@ -13,18 +12,18 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * not guaranteed to present in all version.
  */
 @SideOnly( Side.CLIENT )
-public class PatchedKeyBinding extends KeyBinding implements IPatchedKeyBinding
+public class PatchedKeyBinding extends KeyBinding
 {
 	public PatchedKeyBinding(
 		String description,
-		IKeyConflictContext key_conflict_context,
-		int key,
+		IKeyConflictContext conflict_context,
+		int key_code,
 		ImmutableSet< Integer > cmb_keys,
 		String category
 	) {
-		super( description, key_conflict_context, key, category );
+		super( description, conflict_context, key_code, category );
 		
-		final IKeyBinding kb = ( IKeyBinding ) this;
+		final IKeyBindingImpl kb = ( IKeyBindingImpl ) this;
 		kb.initDefaultCmbKeys( cmb_keys );
 	}
 }

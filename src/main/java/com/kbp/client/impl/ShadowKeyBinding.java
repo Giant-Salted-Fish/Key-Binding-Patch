@@ -1,38 +1,98 @@
 package com.kbp.client.impl;
 
-import com.google.common.collect.ImmutableSet;
+import com.kbp.client.api.IPatchedKeyBinding;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.input.Keyboard;
+
+import javax.annotation.Nonnull;
+import java.util.Optional;
 
 /**
- * Only used by internal shadow key bindings.
+ * Internal shadow key binding implementation.
  */
 @SideOnly( Side.CLIENT )
-public final class ShadowKeyBinding extends PatchedKeyBinding implements IKeyBinding
+public final class ShadowKeyBinding extends KeyBinding implements IPatchedKeyBinding, IKeyBindingImpl
 {
-	private final int index;
+	public final KeyBinding target;
 	
-	public ShadowKeyBinding(
-		String description,
-		IKeyConflictContext key_conflict_context,
-		int key,
-		ImmutableSet< Integer > cmb_keys,
-		String category,
-		int index
-	) {
-		super( description, key_conflict_context, key, cmb_keys, category );
+	public ShadowKeyBinding( KeyBinding target, int index )
+	{
+		super(
+			String.format( "shadow#%s@%d", target.getKeyDescription(), index ),
+			Keyboard.KEY_NONE,
+			target.getKeyCategory()
+		);
 		
-		this.index = index;
+		this.target = target;
 	}
 	
 	@Override
-	public String getSaveKey() {
-		return this.getKeyDescription() + "_" + index;
+	public boolean isKeyDown() {
+		return this.target.isKeyDown();
 	}
 	
 	@Override
-	public boolean isShadowKeyBinding() {
-		return true;
+	public boolean isPressed() {
+		return this.target.isPressed();
+	}
+	
+	@Override
+	public void setKeyConflictContext( @Nonnull IKeyConflictContext conflict_context ) {
+		this.target.setKeyConflictContext( conflict_context );
+	}
+	
+	@Nonnull
+	@Override
+	public IKeyConflictContext getKeyConflictContext() {
+		return this.target.getKeyConflictContext();
+	}
+	
+	@Override
+	public void addPressCallback( Runnable callback )
+	{
+		final IPatchedKeyBinding ikb = ( IPatchedKeyBinding ) this.target;
+		ikb.addPressCallback( callback );
+	}
+	
+	@Override
+	public boolean removePressCallback( Runnable callback )
+	{
+		final IPatchedKeyBinding ikb = ( IPatchedKeyBinding ) this.target;
+		return ikb.removePressCallback( callback );
+	}
+	
+	@Override
+	public void addReleaseCallback( Runnable callback )
+	{
+		final IPatchedKeyBinding ikb = ( IPatchedKeyBinding ) this.target;
+		ikb.addReleaseCallback( callback );
+	}
+	
+	@Override
+	public boolean removeReleaseCallback( Runnable callback )
+	{
+		final IPatchedKeyBinding ikb = ( IPatchedKeyBinding ) this.target;
+		return ikb.removeReleaseCallback( callback );
+	}
+	
+	@Override
+	public Object getDelegate() {
+		return this.target;
+	}
+	
+	
+	public static Optional< String > getRawDescription( String description )
+	{
+		if ( description.startsWith( "shadow#" ) )
+		{
+			final int suffix = description.indexOf( '@' );
+			return Optional.of( description.substring( 7, suffix ) );
+		}
+		else {
+			return Optional.empty();
+		}
 	}
 }

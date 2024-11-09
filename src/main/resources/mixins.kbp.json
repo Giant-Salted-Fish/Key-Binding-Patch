@@ -6,9 +6,12 @@
 	"mixins": [],
 	"client": [
 		"FMLClientHandlerMixin",
-		"GuiControlsMixin",
 		"GameSettingsMixin",
-		"KeyBindingMixin"
+		"GuiControlsMixin",
+		"GuiKeyBindingListMixin",
+		"KeyBindingMapMixin",
+		"KeyBindingMixin",
+		"KeyEntryMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

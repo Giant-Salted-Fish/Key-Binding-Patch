@@ -25,21 +25,13 @@ public interface IPatchedKeyBinding
 		throw new UnsupportedOperationException();
 	}
 	
-	default void addPressCallback( Runnable callback ) {
-		throw new UnsupportedOperationException();
-	}
+	void addPressCallback( Runnable callback );
 	
-	default boolean removePressCallback( Runnable callback ) {
-		throw new UnsupportedOperationException();
-	}
+	boolean removePressCallback( Runnable callback );
 	
-	default void addReleaseCallback( Runnable callback ) {
-		throw new UnsupportedOperationException();
-	}
+	void addReleaseCallback( Runnable callback );
 	
-	default boolean removeReleaseCallback( Runnable callback ) {
-		throw new UnsupportedOperationException();
-	}
+	boolean removeReleaseCallback( Runnable callback );
 	
 	default void pressKey() {
 		throw new UnsupportedOperationException();

@@ -23,7 +23,8 @@ public abstract class KeyBindingBuilder
 	/**
 	 * @see KBPMod#newBuilder(String)
 	 */
-	public KeyBindingBuilder() { }
+	protected KeyBindingBuilder() {
+	}
 	
 	public KeyBindingBuilder withCategory( String category )
 	{
@@ -46,12 +47,6 @@ public abstract class KeyBindingBuilder
 	public KeyBindingBuilder withCmbKeys( Integer... cmb_keys )
 	{
 		this.cmb_keys = ImmutableSet.copyOf( cmb_keys );
-		return this;
-	}
-	
-	public KeyBindingBuilder withCmbKeys( ImmutableSet< Integer > cmb_keys )
-	{
-		this.cmb_keys = cmb_keys;
 		return this;
 	}
 	

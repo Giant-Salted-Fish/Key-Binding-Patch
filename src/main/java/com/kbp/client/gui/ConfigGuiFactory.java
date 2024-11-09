@@ -18,7 +18,6 @@ public final class ConfigGuiFactory implements IModGuiFactory
 {
 	@Override
 	public void initialize( Minecraft mc ) {
-		// Pass.
 	}
 	
 	@Override
@@ -27,8 +26,8 @@ public final class ConfigGuiFactory implements IModGuiFactory
 	}
 	
 	@Override
-	public GuiScreen createConfigGui( GuiScreen parentScreen ) {
-		return new ConfigGuiScreen( parentScreen );
+	public GuiScreen createConfigGui( GuiScreen parent ) {
+		return new ConfigGuiScreen( parent );
 	}
 	
 	@Override

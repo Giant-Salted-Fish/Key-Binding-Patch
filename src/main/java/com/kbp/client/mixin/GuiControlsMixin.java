@@ -1,9 +1,8 @@
 package com.kbp.client.mixin;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
+import com.kbp.client.api.IPatchedKeyBinding;
 import com.kbp.client.impl.ActiveKeyTracker;
-import com.kbp.client.impl.IKeyBinding;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiControls;
 import net.minecraft.client.gui.GuiKeyBindingList;
@@ -17,14 +16,12 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
 import java.io.IOException;
-import java.util.LinkedList;
 
 @Mixin( GuiControls.class )
 public abstract class GuiControlsMixin extends GuiScreen
 {
 	@Shadow
-	@Final
-	private GameSettings options;
+	private @Final GameSettings options;
 	
 	@Shadow
 	public KeyBinding buttonId;
@@ -107,7 +104,7 @@ public abstract class GuiControlsMixin extends GuiScreen
 	@Unique
 	private void __updateSelectedKeyBinding()
 	{
-		final IKeyBinding ikb = ( IKeyBinding ) this.buttonId;
+		final IPatchedKeyBinding ikb = ( IPatchedKeyBinding ) this.buttonId;
 		final int key = this.key_tracker.getKey();
 		final ImmutableSet< Integer > cmb_keys = this.key_tracker.getCmbKeys();
 		ikb.setKeyAndCmbKeys( key, cmb_keys );

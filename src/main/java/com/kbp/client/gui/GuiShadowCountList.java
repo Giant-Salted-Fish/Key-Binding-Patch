@@ -3,7 +3,7 @@ package com.kbp.client.gui;
 import com.kbp.client.KBPMod;
 import com.kbp.client.KBPModConfig;
 import com.kbp.client.api.IPatchedKeyBinding;
-import com.kbp.client.impl.IKeyBinding;
+import com.kbp.client.impl.ShadowKeyBinding;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
@@ -41,7 +41,9 @@ final class GuiShadowCountList extends GuiListExtended
 		.collect( Collectors.groupingBy( Function.identity(), Collectors.summingInt( o -> 1 ) ) )
 	);
 	
-	// {shadow_count} - {shadow_change} = previous count.
+	/**
+	 * {previous count} = {shadow_count} - {shadow_change}
+	 */
 	private final HashMap< KeyBinding, Integer > shadow_change = new HashMap<>();
 	
 	
@@ -54,7 +56,7 @@ final class GuiShadowCountList extends GuiListExtended
 		
 		final KeyBinding[] kb_arr = (
 			Arrays.stream( this.mc.gameSettings.keyBindings )
-			.filter( kb -> !( ( IKeyBinding ) kb ).isShadowKeyBinding() )
+			.filter( kb -> !( kb instanceof ShadowKeyBinding ) )
 			.sorted()
 			.toArray( KeyBinding[]::new )
 		);
@@ -81,7 +83,7 @@ final class GuiShadowCountList extends GuiListExtended
 			.map( I18n::format )
 			.map( this.mc.fontRenderer::getStringWidth )
 			.max( Integer::compare )
-			.orElseThrow( RuntimeException::new )
+			.orElseThrow( IllegalStateException::new )
 		);
 	}
 	
@@ -135,7 +137,6 @@ final class GuiShadowCountList extends GuiListExtended
 		
 		@Override
 		public void updatePosition( int slotIndex, int x, int y, float partialTicks ) {
-			// Pass.
 		}
 		
 		public void drawEntry(
@@ -176,9 +177,7 @@ final class GuiShadowCountList extends GuiListExtended
 			int mouseEvent,
 			int relativeX,
 			int relativeY
-		) {
-			// Pass.
-		}
+		) { }
 	}
 	
 	
@@ -205,7 +204,6 @@ final class GuiShadowCountList extends GuiListExtended
 		
 		@Override
 		public void updatePosition( int slotIndex, int x, int y, float partialTicks ) {
-			// Pass.
 		}
 		
 		@Override
