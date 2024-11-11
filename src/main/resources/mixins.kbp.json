@@ -9,9 +9,11 @@
 		"GameSettingsMixin",
 		"GuiControlsMixin",
 		"GuiKeyBindingListMixin",
+		"GuiModListMixin",
 		"KeyBindingMapMixin",
 		"KeyBindingMixin",
-		"KeyEntryMixin"
+		"KeyEntryMixin",
+		"RealmsNotificationsScreenMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
