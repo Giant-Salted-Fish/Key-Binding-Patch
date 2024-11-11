@@ -3,7 +3,7 @@ package com.kbp.client.gui;
 import com.kbp.client.KBPMod;
 import com.kbp.client.KBPModConfig;
 import com.kbp.client.api.IPatchedKeyBinding;
-import com.kbp.client.impl.ShadowKeyBinding;
+import com.kbp.client.impl.IKeyBindingImpl;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
@@ -56,7 +56,7 @@ final class GuiShadowCountList extends GuiListExtended
 		
 		final KeyBinding[] kb_arr = (
 			Arrays.stream( this.mc.gameSettings.keyBindings )
-			.filter( kb -> !( kb instanceof ShadowKeyBinding ) )
+			.filter( kb -> !IKeyBindingImpl.isShadowKeyBinding( kb ) )
 			.sorted()
 			.toArray( KeyBinding[]::new )
 		);

@@ -1,6 +1,6 @@
 package com.kbp.client.mixin;
 
-import com.kbp.client.impl.ShadowKeyBinding;
+import com.kbp.client.impl.IKeyBindingImpl;
 import net.minecraft.client.gui.GuiKeyBindingList;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Optional;
 
 @Mixin( GuiKeyBindingList.class )
 public abstract class GuiKeyBindingListMixin
@@ -25,14 +26,8 @@ public abstract class GuiKeyBindingListMixin
 	private void onNew$Invoke( Object[] array )
 	{
 		Arrays.sort( array, Comparator.comparing( o -> {
-			if ( o instanceof ShadowKeyBinding )
-			{
-				final ShadowKeyBinding skb = ( ShadowKeyBinding ) o;
-				return skb.target;
-			}
-			else {
-				return ( KeyBinding ) o;
-			}
+			final KeyBinding kb = ( KeyBinding ) o;
+			return IKeyBindingImpl.getShadowTarget( kb ).orElse( kb );
 		} ) );
 	}
 	
@@ -45,10 +40,8 @@ public abstract class GuiKeyBindingListMixin
 	)
 	private String onNew$Invoke( String raw_key, Object[] args )
 	{
-		return (
-			ShadowKeyBinding.getRawDescription( raw_key )
-			.map( key -> "*" + I18n.format( key, args ) )
-			.orElseGet( () -> I18n.format( raw_key, args ) )
-		);
+		final Optional< String > opt = IKeyBindingImpl.getShadowTarget( raw_key );
+		final String localized = I18n.format( opt.orElse( raw_key ), args );
+		return opt.isPresent() ? "*" + localized : localized;
 	}
 }

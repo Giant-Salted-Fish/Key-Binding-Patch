@@ -3,12 +3,14 @@ package com.kbp.client.impl;
 import com.google.common.collect.ImmutableSet;
 import com.kbp.client.api.IPatchedKeyBinding;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -57,8 +59,8 @@ public interface IKeyBindingImpl
 		
 		final boolean contains_ctrl = (
 			Minecraft.IS_RUNNING_ON_MAC
-				? cmb_keys.contains( Keyboard.KEY_LMETA ) || cmb_keys.contains( Keyboard.KEY_RMETA )
-				: cmb_keys.contains( Keyboard.KEY_LCONTROL ) || cmb_keys.contains( Keyboard.KEY_RCONTROL )
+			? cmb_keys.contains( Keyboard.KEY_LMETA ) || cmb_keys.contains( Keyboard.KEY_RMETA )
+			: cmb_keys.contains( Keyboard.KEY_LCONTROL ) || cmb_keys.contains( Keyboard.KEY_RCONTROL )
 		);
 		if ( contains_ctrl ) {
 			return KeyModifier.CONTROL;
@@ -73,5 +75,33 @@ public interface IKeyBindingImpl
 		}
 		
 		return KeyModifier.NONE;
+	}
+	
+	static boolean isShadowKeyBinding( KeyBinding kb ) {
+		return kb instanceof ShadowKeyBinding;
+	}
+	
+	static Optional< KeyBinding > getShadowTarget( KeyBinding kb )
+	{
+		if ( kb instanceof ShadowKeyBinding )
+		{
+			final ShadowKeyBinding skb = ( ShadowKeyBinding ) kb;
+			return Optional.of( skb.target );
+		}
+		else {
+			return Optional.empty();
+		}
+	}
+	
+	static Optional< String > getShadowTarget( String description )
+	{
+		if ( description.startsWith( "shadow#" ) )
+		{
+			final int suffix = description.indexOf( '@' );
+			return Optional.of( description.substring( 7, suffix ) );
+		}
+		else {
+			return Optional.empty();
+		}
 	}
 }

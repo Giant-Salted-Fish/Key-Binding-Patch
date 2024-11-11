@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableSet;
 import com.kbp.client.api.IPatchedKeyBinding;
 import com.kbp.client.impl.IKeyBindingImpl;
 import com.kbp.client.impl.InputSignal;
-import com.kbp.client.impl.ShadowKeyBinding;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.settings.IKeyConflictContext;
@@ -161,7 +160,7 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 					break;
 				}
 				
-				final IKeyConflictContext ctx1 = kbm1.getKeyBinding().getKeyConflictContext();
+				final IKeyConflictContext ctx1 = kbm1.getKeyConflictContext();
 				if ( ctx1.isActive() && cmb_keys1.stream().allMatch( IKeyBindingImpl::isKeyDown ) ) {
 					kbm1.pressKey();
 				}
@@ -177,7 +176,7 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 	)
 	private void onNew( String description, int key_code, String category, CallbackInfo ci )
 	{
-		if ( !( this.getKeyBinding() instanceof ShadowKeyBinding ) ) {
+		if ( !IKeyBindingImpl.isShadowKeyBinding( this.getKeyBinding() ) ) {
 			this.input_signal = new InputSignal();
 		}
 		
@@ -226,23 +225,23 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 	private void unpressKey()
 	{
 		final KeyBindingMixin delegate = ( KeyBindingMixin ) this.getDelegate();
-		delegate.pressTime -= Math.min( 1, delegate.pressTime );
+		delegate.pressTime = Math.max( 0, delegate.pressTime - 1 );
 		this.releaseKey();
 	}
 	
 	/**
-	 * This method is mainly being used in GUI codes where the key bindings are
-	 * not being updated by {@link #setKeyBindState(int, boolean)}.
+	 * This method is mainly being used in GUI codes where key bindings are not
+	 * being updated by {@link #setKeyBindState(int, boolean)}.
 	 *
 	 * @author Giant_Salted_Fish
 	 * @reason Need to also check the cmb keys.
 	 */
 	@Overwrite( remap = false )
-	public boolean isActiveAndMatches( int keyCode )
+	public boolean isActiveAndMatches( int key_code )
 	{
 		return (
-			keyCode != Keyboard.KEY_NONE
-			&& keyCode == this.getKeyCode()
+			key_code != Keyboard.KEY_NONE
+			&& key_code == this.getKeyCode()
 			&& this.getCmbKeys().stream().allMatch( IKeyBindingImpl::isKeyDown )
 			&& this.getKeyConflictContext().isActive()
 		);

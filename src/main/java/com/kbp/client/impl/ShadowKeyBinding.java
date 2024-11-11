@@ -8,7 +8,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
 
 import javax.annotation.Nonnull;
-import java.util.Optional;
 
 /**
  * Internal shadow key binding implementation.
@@ -81,18 +80,5 @@ public final class ShadowKeyBinding extends KeyBinding implements IPatchedKeyBin
 	@Override
 	public Object getDelegate() {
 		return this.target;
-	}
-	
-	
-	public static Optional< String > getRawDescription( String description )
-	{
-		if ( description.startsWith( "shadow#" ) )
-		{
-			final int suffix = description.indexOf( '@' );
-			return Optional.of( description.substring( 7, suffix ) );
-		}
-		else {
-			return Optional.empty();
-		}
 	}
 }

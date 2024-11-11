@@ -1,11 +1,13 @@
 package com.kbp.client.mixin;
 
-import com.kbp.client.impl.ShadowKeyBinding;
+import com.kbp.client.impl.IKeyBindingImpl;
 import net.minecraft.client.gui.GuiKeyBindingList.KeyEntry;
 import net.minecraft.client.resources.I18n;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+
+import java.util.Optional;
 
 @Mixin( KeyEntry.class )
 public abstract class KeyEntryMixin
@@ -19,10 +21,8 @@ public abstract class KeyEntryMixin
 	)
 	private String onInit$Invoke( String raw_key, Object[] args )
 	{
-		return (
-			ShadowKeyBinding.getRawDescription( raw_key )
-			.map( key -> "*" + I18n.format( key, args ) )
-			.orElseGet( () -> I18n.format( raw_key, args ) )
-		);
+		final Optional< String > opt = IKeyBindingImpl.getShadowTarget( raw_key );
+		final String localized = I18n.format( opt.orElse( raw_key ), args );
+		return opt.isPresent() ? "*" + localized : localized;
 	}
 }
