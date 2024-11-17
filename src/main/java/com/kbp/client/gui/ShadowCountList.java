@@ -3,7 +3,7 @@ package com.kbp.client.gui;
 import com.kbp.client.KBPMod;
 import com.kbp.client.KBPModConfig;
 import com.kbp.client.api.IPatchedKeyMapping;
-import com.kbp.client.impl.IKeyMapping;
+import com.kbp.client.impl.IKeyMappingImpl;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.KeyMapping;
@@ -20,7 +20,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +46,9 @@ final class ShadowCountList extends ContainerObjectSelectionList< KeyBindsList.E
 		.collect( Collectors.groupingBy( Function.identity(), Collectors.summingInt( o -> 1 ) ) )
 	);
 	
-	// {shadow_count} - {shadow_change} = previous count.
+	/**
+	 * {previous count} = {shadow_count} - {shadow_change}
+ 	 */
 	private final HashMap< KeyMapping, Integer > shadow_change = new HashMap<>();
 	
 	
@@ -59,16 +60,16 @@ final class ShadowCountList extends ContainerObjectSelectionList< KeyBindsList.E
 		
 		final var p_lst = (
 			Arrays.stream( this.minecraft.options.keyMappings )
-			.filter( km -> !( ( IKeyMapping ) km ).isShadowKeyMapping() )
+			.filter( km -> !IKeyMappingImpl.isShadowKeyMapping( km ) )
+			.sorted()
 			.map( km -> Pair.of( km, new TranslatableComponent( km.getName() ) ) )
-			.sorted( Comparator.comparing( Pair::getFirst ) )
 			.toList()
 		);
 		
-		final var grouped = (
-			p_lst.stream()
-			.collect( Collectors.groupingBy( p -> p.getFirst().getCategory() ) )
-		);
+		final var grouped = p_lst.stream().collect( Collectors.groupingBy(
+			p -> p.getFirst().getCategory(),
+			Collectors.mapping( p -> new ShadowCountEntry( p.getFirst(), p.getSecond() ), Collectors.toList() )
+		) );
 		
 		p_lst.stream()
 			.map( Pair::getFirst )
@@ -77,10 +78,7 @@ final class ShadowCountList extends ContainerObjectSelectionList< KeyBindsList.E
 			.forEachOrdered( category -> {
 				final var label = new TranslatableComponent( category );
 				this.addEntry( new CategoryEntry( label ) );
-				
-				grouped.get( category ).stream()
-					.map( p -> new ShadowCountEntry( p.getFirst(), p.getSecond() ) )
-					.forEachOrdered( this::addEntry );
+				grouped.get( category ).forEach( this::addEntry );
 			} );
 		
 		this.max_label_width = (
@@ -88,7 +86,7 @@ final class ShadowCountList extends ContainerObjectSelectionList< KeyBindsList.E
 			.map( Pair::getSecond )
 			.map( this.minecraft.font::width )
 			.max( Integer::compare )
-			.orElseThrow( RuntimeException::new )
+			.orElseThrow( IllegalStateException::new )
 		);
 	}
 	

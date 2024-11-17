@@ -1,40 +1,88 @@
 package com.kbp.client.impl;
 
-import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.platform.InputConstants.Key;
+import com.kbp.client.api.IPatchedKeyMapping;
+import com.kbp.client.mixin.ToggleKeyMappingAccess;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.ToggleKeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-
-import java.util.function.BooleanSupplier;
+import net.minecraftforge.client.settings.IKeyConflictContext;
+import org.jetbrains.annotations.NotNull;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * Only used by internal shadow key bindings.
  */
 @OnlyIn( Dist.CLIENT )
-public final class ShadowToggleableKeyMapping extends PatchedToggleableKeyMapping implements IKeyMapping
+public final class ShadowToggleableKeyMapping
+	extends ToggleKeyMapping
+	implements IPatchedKeyMapping, IKeyMappingImpl
 {
-	private final int index;
+	public final KeyMapping target;
 	
-	public ShadowToggleableKeyMapping(
-		String description,
-		int key_code,
-		ImmutableSet< Key > cmb_keys,
-		String category,
-		BooleanSupplier toggle_controller,
-		int index
-	) {
-		super( description, key_code, cmb_keys, category, toggle_controller );
+	public ShadowToggleableKeyMapping( KeyMapping target, int index )
+	{
+		super(
+			String.format( "shadow#%s@%d", target.getName(), index ),
+			GLFW.GLFW_KEY_UNKNOWN,
+			target.getCategory(),
+			( ( ToggleKeyMappingAccess ) target ).getNeedsToggle()
+		);
 		
-		this.index = index;
+		this.target = target;
 	}
 	
 	@Override
-	public String getSaveKey() {
-		return this.getName() + "_" + this.index;
+	public boolean isDown() {
+		return this.target.isDown();
 	}
 	
 	@Override
-	public boolean isShadowKeyMapping() {
-		return true;
+	public boolean consumeClick() {
+		return this.target.consumeClick();
+	}
+	
+	@Override
+	public void setKeyConflictContext( @NotNull IKeyConflictContext context ) {
+		this.target.setKeyConflictContext( context );
+	}
+	
+	@NotNull
+	@Override
+	public IKeyConflictContext getKeyConflictContext() {
+		return this.target.getKeyConflictContext();
+	}
+	
+	@Override
+	public void addPressCallback( Runnable callback )
+	{
+		final var ikb = ( IPatchedKeyMapping ) this.target;
+		ikb.addPressCallback( callback );
+	}
+	
+	@Override
+	public boolean removePressCallback( Runnable callback )
+	{
+		final var ikb = ( IPatchedKeyMapping ) this.target;
+		return ikb.removePressCallback( callback );
+	}
+	
+	@Override
+	public void addReleaseCallback( Runnable callback )
+	{
+		final var ikb = ( IPatchedKeyMapping ) this.target;
+		ikb.addReleaseCallback( callback );
+	}
+	
+	@Override
+	public boolean removeReleaseCallback( Runnable callback )
+	{
+		final var ikb = ( IPatchedKeyMapping ) this.target;
+		return ikb.removeReleaseCallback( callback );
+	}
+	
+	@Override
+	public Object getDelegate() {
+		return this.target;
 	}
 }

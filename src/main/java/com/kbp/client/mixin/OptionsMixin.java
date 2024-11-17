@@ -1,29 +1,26 @@
 package com.kbp.client.mixin;
 
 import com.google.common.collect.ImmutableSet;
-import com.kbp.client.impl.IKeyMapping;
+import com.kbp.client.api.IPatchedKeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Options;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraftforge.client.settings.KeyModifier;
-import org.spongepowered.asm.mixin.Final;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.At.Shift;
+import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Mixin( Options.class )
 public abstract class OptionsMixin
@@ -31,24 +28,21 @@ public abstract class OptionsMixin
 	@Shadow
 	public KeyMapping[] keyMappings;
 	
-	@Shadow
-	@Final
-	private File optionsFile;
-	
 	
 	@Unique
-	private static final KeyMapping[] EMPTY_KEY_MAPPINGS = { };
-	
-	
-	@Inject( method = "load", at = @At( "HEAD" ) )
-	private void onLoad( CallbackInfo ci )
+	private static final Method FieldAccess$process;
+	static
 	{
-		// Mapping reset would not be called if options file does not exist. \
-		// We need to call it manually here.
-		if ( !this.optionsFile.exists() ) {
-			KeyMapping.resetMapping();
+		final Class< ? > clazz;
+		try {
+			clazz = Class.forName( "net.minecraft.client.Options$FieldAccess" );
 		}
+		catch ( ClassNotFoundException e ) {
+			throw new RuntimeException( e );
+		}
+		FieldAccess$process = ObfuscationReflectionHelper.findMethod( clazz, "m_141943_", String.class, String.class );
 	}
+	
 	
 	@Redirect(
 		method = "processOptions",
@@ -58,68 +52,56 @@ public abstract class OptionsMixin
 		)
 	)
 	private KeyMapping[] onProcessOptions$GetField( Options self ) {
-		return EMPTY_KEY_MAPPINGS;  // Skip vanilla key mappings load/save.
+		return new KeyMapping[ 0 ];  // Skip vanilla key mappings load/save.
 	}
 	
 	@Inject(
-		method = "save",
+		method = "processOptions",
 		at = @At(
 			value = "INVOKE",
-			target = "Lnet/minecraft/client/Options;processOptions(Lnet/minecraft/client/Options$FieldAccess;)V",
-			shift = Shift.AFTER
-		),
-		locals = LocalCapture.CAPTURE_FAILHARD
+			target = "Lnet/minecraft/sounds/SoundSource;values()[Lnet/minecraft/sounds/SoundSource;"
+		)
 	)
-	private void onSave( CallbackInfo ci, PrintWriter writer )
+	private void onProcessOptions( @Coerce Object access, CallbackInfo ci )
 	{
 		Arrays.stream( this.keyMappings )
 			.map( km -> {
-				final var ikm = ( IKeyMapping ) km;
-				final var save_key = "key_" + ikm.getSaveKey();
-				final var key = km.getKey().getName();
-				final var modifier = KeyModifier.NONE.toString();
-				final var cmb_keys = (
-					ikm.getCmbKeys().stream()
-					.map( Key::getName )
-					.collect( Collectors.joining( "+" ) )
+				final var name = km.getName();
+				final var save_key = "key_" + name;
+				final var save_data = km.saveString();
+				final String read_data;
+				try {
+					read_data = ( String ) FieldAccess$process.invoke( access, save_key, save_data );
+				}
+				catch ( IllegalAccessException | InvocationTargetException e ) {
+					throw new RuntimeException( e );
+				}
+				return (
+					read_data.equals( save_data )
+					? Optional.< Pair< KeyMapping, String > >empty()
+					: Optional.of( Pair.of( km, read_data ) )
 				);
-				// This format is design to be compatible with vanilla key \
-				// saving, so that player can still have their key settings \
-				// after removing this mod.
-				return String.join( ":", save_key, key, modifier, cmb_keys );
 			} )
-			.forEachOrdered( writer::println );
-	}
-	
-	@Inject(
-		method = "load",
-		at = @At(
-			value = "INVOKE",
-			target = "Lnet/minecraft/client/Options;processOptions(Lnet/minecraft/client/Options$FieldAccess;)V",
-			shift = Shift.AFTER
-		),
-		locals = LocalCapture.CAPTURE_FAILHARD
-	)
-	private void onLoad(
-		CallbackInfo ci,
-		CompoundTag compoundtag,
-		BufferedReader bufferedreader,
-		CompoundTag compoundtag1
-	) {
-		Arrays.stream( this.keyMappings )
-			.map( IKeyMapping.class::cast )
-			.filter( ikm -> compoundtag1.contains( "key_" + ikm.getSaveKey() ) )
-			.forEach( ikm -> {
-				final var data = compoundtag1.getString( "key_" + ikm.getSaveKey() );
-				final var split = data.split( ":" );
-				final var key = InputConstants.getKey( split[ 0 ] );
-				final var cmb_keys = (
-					split.length > 2
-					? Arrays.stream( split[ 2 ].split( "\\+" ) )
+			.filter( Optional::isPresent )
+			.map( Optional::get )
+			.forEachOrdered( p -> {
+				final var data = p.getSecond();
+				final var splits = data.split( ":" );
+				final var key = InputConstants.getKey( splits[ 0 ] );
+				final ImmutableSet< Key > cmb_keys;
+				if ( splits.length > 2 )
+				{
+					cmb_keys = (
+						Arrays.stream( splits[ 2 ].split( "\\+" ) )
 						.map( InputConstants::getKey )
 						.collect( ImmutableSet.toImmutableSet() )
-					: ImmutableSet.< Key >of()
-				);
+					);
+				}
+				else {
+					cmb_keys = ImmutableSet.of();
+				}
+				
+				final var ikm = ( IPatchedKeyMapping ) p.getFirst();
 				ikm.setKeyAndCmbKeys( key, cmb_keys );
 			} );
 	}

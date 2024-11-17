@@ -57,9 +57,10 @@ public final class KBPMod
 	{
 		return new KeyMappingBuilder() {
 			@Override
+			@SuppressWarnings( "DataFlowIssue" )
 			public IPatchedKeyMapping build()
 			{
-				return new PatchedKeyMapping(
+				return ( IPatchedKeyMapping ) new PatchedKeyMapping(
 					description,
 					this.conflict_context,
 					this.key,
@@ -80,10 +81,11 @@ public final class KBPMod
 	) {
 		return new KeyMappingBuilder() {
 			@Override
+			@SuppressWarnings( "DataFlowIssue" )
 			public IPatchedKeyMapping build()
 			{
 				final var default_key = this.key;
-				final var tkm = new PatchedToggleableKeyMapping(
+				final PatchedToggleableKeyMapping tkm = new PatchedToggleableKeyMapping(
 					description,
 					InputConstants.UNKNOWN.getValue(),
 					this.cmb_keys,
@@ -97,16 +99,16 @@ public final class KBPMod
 					}
 				};
 				tkm.setKeyConflictContext( this.conflict_context );
-				return tkm;
+				return ( IPatchedKeyMapping ) tkm;
 			}
 		};
 	}
 	
 	
-	// >>> Mod Setup <<<
+	// Internal implementations that should not be accessed by other mods.
 	public KBPMod()
 	{
-		// Make sure the mod being absent on the other network side does not \
+		// Make sure the mod being absent on the other network side does not
 		// cause the client to display the server as incompatible.
 		final var load_ctx = ModLoadingContext.get();
 		load_ctx.registerExtensionPoint(

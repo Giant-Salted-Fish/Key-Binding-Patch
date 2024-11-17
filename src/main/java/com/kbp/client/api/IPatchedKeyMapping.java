@@ -6,13 +6,14 @@ import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.client.KeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.extensions.IForgeKeyMapping;
 
 /**
  * @see KBPMod#getPatched(KeyMapping)
  * @see KBPMod#findByName(String)
  */
 @OnlyIn( Dist.CLIENT )
-public interface IPatchedKeyMapping
+public interface IPatchedKeyMapping extends IForgeKeyMapping
 {
 	default ImmutableSet< Key > getDefaultCmbKeys() {
 		throw new UnsupportedOperationException();
@@ -26,21 +27,13 @@ public interface IPatchedKeyMapping
 		throw new UnsupportedOperationException();
 	}
 	
-	default void addPressCallback( Runnable callback ) {
-		throw new UnsupportedOperationException();
-	}
+	void addPressCallback( Runnable callback );
 	
-	default boolean removePressCallback( Runnable callback ) {
-		throw new UnsupportedOperationException();
-	}
+	boolean removePressCallback( Runnable callback );
 	
-	default void addReleaseCallback( Runnable callback ) {
-		throw new UnsupportedOperationException();
-	}
+	void addReleaseCallback( Runnable callback );
 	
-	default boolean removeReleaseCallback( Runnable callback ) {
-		throw new UnsupportedOperationException();
-	}
+	boolean removeReleaseCallback( Runnable callback );
 	
 	default KeyMapping getKeyMapping() {
 		throw new UnsupportedOperationException();
