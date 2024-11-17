@@ -17,7 +17,7 @@ import java.util.Optional;
 
 @Mod(
 	modid = KBPMod.MODID,
-	version = "1.12.2-1.3.3.0",
+	version = "1.12.2-1.3.3.1",
 	clientSideOnly = true,
 	updateJSON = "https://raw.githubusercontent.com/Giant-Salted-Fish/Key-Binding-Patch/1.16.X/update.json",
 	acceptedMinecraftVersions = "[1.12,1.13)",
@@ -49,7 +49,7 @@ public final class KBPMod
 		return (
 			Arrays.stream( Minecraft.getMinecraft().gameSettings.keyBindings )
 			.filter( kb -> kb.getKeyDescription().equals( name ) )
-			.findFirst()
+			.findAny()
 			.map( KBPMod::getPatched )
 		);
 	}

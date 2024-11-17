@@ -117,8 +117,9 @@ public abstract class GameSettingsMixin
 		final String save_key = s1.substring( 4 );
 		Arrays.stream( this.keyBindings )
 			.filter( kb -> kb.getKeyDescription().equals( save_key ) )
+			.findAny()
 			.map( IPatchedKeyBinding.class::cast )
-			.forEach( ikb -> {
+			.ifPresent( ikb -> {
 				final String[] split = s2.split( ":" );
 				final int key_code = Integer.parseInt( split[ 0 ] );
 				final ImmutableSet< Integer > cmb_keys;

@@ -247,7 +247,6 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 	{
 		final KeyModifier resolved = modifier.matches( key_code ) ? KeyModifier.NONE : modifier;
 		this.setKeyAndCmbKeys( key_code, IKeyBindingImpl.toCmbKeySet( resolved ) );
-		this.keyModifier = resolved;
 	}
 	
 	/**
@@ -286,9 +285,9 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 			return false;
 		}
 		
-		final IPatchedKeyBinding other_ = ( IPatchedKeyBinding ) other;
+		final KeyBindingMixin okbm = ( KeyBindingMixin ) ( Object ) other;
 		final ImmutableSet< Integer > cmb0 = this.getCmbKeys();
-		final ImmutableSet< Integer > cmb1 = other_.getCmbKeys();
+		final ImmutableSet< Integer > cmb1 = okbm.getCmbKeys();
 		final int key0 = this.getKeyCode();
 		final int key1 = other.getKeyCode();
 		return (
@@ -311,9 +310,9 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 			return false;
 		}
 		
-		final IPatchedKeyBinding other_ = ( IPatchedKeyBinding ) other;
+		final KeyBindingMixin okbm = ( KeyBindingMixin ) ( Object ) other;
 		final ImmutableSet< Integer > cmb0 = this.getCmbKeys();
-		final ImmutableSet< Integer > cmb1 = other_.getCmbKeys();
+		final ImmutableSet< Integer > cmb1 = okbm.getCmbKeys();
 		final int key0 = this.getKeyCode();
 		final int key1 = other.getKeyCode();
 		return cmb0.contains( key1 ) || cmb1.contains( key0 );
