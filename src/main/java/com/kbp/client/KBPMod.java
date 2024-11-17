@@ -43,7 +43,7 @@ public final class KBPMod
 		return (
 			Arrays.stream( Minecraft.getInstance().options.keyMappings )
 			.filter( kb -> kb.getName().equals( name ) )
-			.findFirst()
+			.findAny()
 			.map( KBPMod::getPatched )
 		);
 	}
@@ -57,9 +57,10 @@ public final class KBPMod
 	{
 		return new KeyBindingBuilder() {
 			@Override
+			@SuppressWarnings( "DataFlowIssue" )
 			public IPatchedKeyBinding build()
 			{
-				return new PatchedKeyBinding(
+				return ( IPatchedKeyBinding ) new PatchedKeyBinding(
 					description,
 					this.conflict_context,
 					this.key,
@@ -80,6 +81,7 @@ public final class KBPMod
 	) {
 		return new KeyBindingBuilder() {
 			@Override
+			@SuppressWarnings( "DataFlowIssue" )
 			public IPatchedKeyBinding build()
 			{
 				final Input default_key = this.key;
@@ -97,16 +99,16 @@ public final class KBPMod
 					}
 				};
 				tkb.setKeyConflictContext( this.conflict_context );
-				return tkb;
+				return ( IPatchedKeyBinding ) tkb;
 			}
 		};
 	}
 	
 	
-	// >>> Mod Setup <<<
+	// Internal implementations that should not be accessed by other mods.
 	public KBPMod()
 	{
-		// Make sure the mod being absent on the other network side does not \
+		// Make sure the mod being absent on the other network side does not
 		// cause the client to display the server as incompatible.
 		final ModLoadingContext load_ctx = ModLoadingContext.get();
 		load_ctx.registerExtensionPoint(

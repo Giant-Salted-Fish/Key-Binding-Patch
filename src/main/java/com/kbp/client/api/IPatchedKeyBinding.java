@@ -6,13 +6,14 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings.Input;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.extensions.IForgeKeybinding;
 
 /**
  * @see KBPMod#getPatched(KeyBinding)
  * @see KBPMod#findByName(String)
  */
 @OnlyIn( Dist.CLIENT )
-public interface IPatchedKeyBinding
+public interface IPatchedKeyBinding extends IForgeKeybinding
 {
 	default ImmutableSet< Input > getDefaultCmbKeys() {
 		throw new UnsupportedOperationException();
@@ -26,21 +27,11 @@ public interface IPatchedKeyBinding
 		throw new UnsupportedOperationException();
 	}
 	
-	default void addPressCallback( Runnable callback ) {
-		throw new UnsupportedOperationException();
-	}
+	void addPressCallback( Runnable callback );
 	
-	default boolean removePressCallback( Runnable callback ) {
-		throw new UnsupportedOperationException();
-	}
+	boolean removePressCallback( Runnable callback );
 	
-	default void addReleaseCallback( Runnable callback ) {
-		throw new UnsupportedOperationException();
-	}
+	void addReleaseCallback( Runnable callback );
 	
-	default boolean removeReleaseCallback( Runnable callback ) {
-		throw new UnsupportedOperationException();
-	}
-	
-	KeyBinding getKeyBinding();
+	boolean removeReleaseCallback( Runnable callback );
 }

@@ -2,7 +2,6 @@ package com.kbp.client.impl;
 
 import com.google.common.collect.ImmutableSet;
 import com.kbp.client.KBPMod;
-import com.kbp.client.api.IPatchedKeyBinding;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings.Input;
 import net.minecraftforge.api.distmarker.Dist;
@@ -14,23 +13,18 @@ import net.minecraftforge.client.settings.IKeyConflictContext;
  * not guaranteed to present in all version.
  */
 @OnlyIn( Dist.CLIENT )
-public class PatchedKeyBinding extends KeyBinding implements IPatchedKeyBinding
+public class PatchedKeyBinding extends KeyBinding
 {
 	public PatchedKeyBinding(
 		String description,
-		IKeyConflictContext key_conflict_context,
+		IKeyConflictContext conflict_context,
 		Input key,
 		ImmutableSet< Input > cmb_keys,
 		String category
 	) {
-		super( description, key_conflict_context, key, category );
+		super( description, conflict_context, key, category );
 		
-		final IKeyBinding kb = ( IKeyBinding ) this;
+		final IKeyBindingImpl kb = ( IKeyBindingImpl ) this;
 		kb.initDefaultCmbKeys( cmb_keys );
-	}
-	
-	@Override
-	public KeyBinding getKeyBinding() {
-		return this;
 	}
 }

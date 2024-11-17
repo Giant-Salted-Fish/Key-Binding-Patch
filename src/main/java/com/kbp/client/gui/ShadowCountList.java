@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.kbp.client.KBPMod;
 import com.kbp.client.KBPModConfig;
 import com.kbp.client.api.IPatchedKeyBinding;
-import com.kbp.client.impl.IKeyBinding;
+import com.kbp.client.impl.IKeyBindingImpl;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.Minecraft;
@@ -24,7 +24,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +50,9 @@ final class ShadowCountList extends AbstractOptionList< KeyBindingList.Entry >
 		.collect( Collectors.groupingBy( Function.identity(), Collectors.summingInt( o -> 1 ) ) )
 	);
 	
-	// {shadow_count} - {shadow_change} = previous count.
+	/**
+	 * {previous count} = {shadow_count} - {shadow_change}
+	 */
 	private final HashMap< KeyBinding, Integer > shadow_change = new HashMap<>();
 	
 	
@@ -63,16 +64,16 @@ final class ShadowCountList extends AbstractOptionList< KeyBindingList.Entry >
 		
 		final List< Pair< KeyBinding, TranslationTextComponent > > p_lst = (
 			Arrays.stream( this.minecraft.options.keyMappings )
-			.filter( kb -> !( ( IKeyBinding ) kb ).isShadowKeyBinding() )
+			.filter( kb -> !IKeyBindingImpl.isShadowKeyBinding( kb ) )
+			.sorted()
 			.map( kb -> Pair.of( kb, new TranslationTextComponent( kb.getName() ) ) )
-			.sorted( Comparator.comparing( Pair::getFirst ) )
 			.collect( Collectors.toList() )
 		);
 		
-		final Map< String, List< Pair< KeyBinding, TranslationTextComponent > > > grouped = (
-			p_lst.stream()
-			.collect( Collectors.groupingBy( p -> p.getFirst().getCategory() ) )
-		);
+		final Map< String, List< ShadowCountEntry > > grouped = p_lst.stream().collect( Collectors.groupingBy(
+			p -> p.getFirst().getCategory(),
+			Collectors.mapping( p -> new ShadowCountEntry( p.getFirst(), p.getSecond() ), Collectors.toList() )
+		) );
 		
 		p_lst.stream()
 			.map( Pair::getFirst )
@@ -81,10 +82,7 @@ final class ShadowCountList extends AbstractOptionList< KeyBindingList.Entry >
 			.forEachOrdered( category -> {
 				final ITextComponent label = new TranslationTextComponent( category );
 				this.addEntry( new CategoryEntry( label ) );
-				
-				grouped.get( category ).stream()
-					.map( p -> new ShadowCountEntry( p.getFirst(), p.getSecond() ) )
-					.forEachOrdered( this::addEntry );
+				grouped.get( category ).forEach( this::addEntry );
 			} );
 		
 		this.max_label_width = (
@@ -92,7 +90,7 @@ final class ShadowCountList extends AbstractOptionList< KeyBindingList.Entry >
 			.map( Pair::getSecond )
 			.map( this.minecraft.font::width )
 			.max( Integer::compare )
-			.orElseThrow( RuntimeException::new )
+			.orElseThrow( IllegalStateException::new )
 		);
 	}
 	

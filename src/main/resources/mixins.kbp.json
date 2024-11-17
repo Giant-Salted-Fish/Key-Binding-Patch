@@ -8,8 +8,10 @@
 		"ClientModLoaderMixin",
 		"ControlsScreenMixin",
 		"GameSettingsMixin",
+		"KeyBindingListMixin",
+		"KeyBindingMapMixin",
 		"KeyBindingMixin",
-		"ToggleableKeyBindingMixin"
+		"ToggleableKeyBindingAccess"
 	],
 	"injectors": {
 		"defaultRequire": 1

@@ -1,12 +1,9 @@
 package com.kbp.client.mixin;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.kbp.client.api.IPatchedKeyBinding;
-import com.kbp.client.impl.IKeyBinding;
+import com.kbp.client.impl.IKeyBindingImpl;
 import com.kbp.client.impl.InputSignal;
-import com.kbp.client.impl.ShadowKeyBinding;
-import net.minecraft.client.GameSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
@@ -14,7 +11,6 @@ import net.minecraft.client.util.InputMappings.Input;
 import net.minecraft.client.util.InputMappings.Type;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.client.extensions.IForgeKeybinding;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyBindingMap;
 import net.minecraftforge.client.settings.KeyModifier;
@@ -28,32 +24,29 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Mixin( KeyBinding.class )
-public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
+public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBinding
 {
-	// >>> Shadow fields and methods <<<
+	// >>> Shadow Fields and Methods <<<
 	@Shadow
-	@Final
-	private static Map< String, KeyBinding > ALL;
+	private static @Final Map< String, KeyBinding > ALL;
 	
 	@Shadow
-	@Final
-	private static KeyBindingMap MAP;
+	private static @Final KeyBindingMap MAP;
 	
 	@Shadow
 	boolean isDown;
+	
+	@Shadow
+	private int clickCount;
 	
 	@Shadow( remap = false )
 	private KeyModifier keyModifierDefault;
@@ -62,38 +55,23 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	private KeyModifier keyModifier;
 	
 	@Shadow
-	public abstract String getCategory();
-	
-	@Shadow
-	public abstract String getName();
-	
-	@Shadow
 	public abstract Input getDefaultKey();
 	
 	@Shadow
 	public abstract void setKey( Input key );
 	
 	
-	// >>> Unique fields <<<
-	@Unique
-	private static final HashMap< KeyModifier, ImmutableSet< Input > >
-		MODIFIER_2_CMB_KEYS = new HashMap<>();
-	static
-	{
-		final BiConsumer< KeyModifier, Integer > adder = ( modifier, key_code ) ->
-			MODIFIER_2_CMB_KEYS.put( modifier, ImmutableSet.of( Type.KEYSYM.getOrCreate( key_code ) ) );
-		adder.accept( KeyModifier.CONTROL, GLFW.GLFW_KEY_LEFT_CONTROL );
-		adder.accept( KeyModifier.SHIFT, GLFW.GLFW_KEY_LEFT_SHIFT );
-		adder.accept( KeyModifier.ALT, GLFW.GLFW_KEY_LEFT_ALT );
-		MODIFIER_2_CMB_KEYS.put( KeyModifier.NONE, ImmutableSet.of() );
-	}
-	
-	@Unique
-	private static final HashMap< Input, List< IKeyBinding > > UPDATE_TABLE = new HashMap<>();
-	
+	// >>> Unique Fields and Methods <<<
+	/**
+	 * {@link #set(Input, boolean)} will also be called on {@link GLFW#GLFW_REPEAT},
+	 * so we need to keep track of the active inputs to avoid repeat activation.
+	 */
 	@Unique
 	private static final HashSet< Input > ACTIVE_INPUTS = new HashSet<>();
 	
+	
+	@Unique
+	private boolean is_active;
 	
 	@Unique
 	private ImmutableSet< Input > default_cmb_keys;
@@ -104,67 +82,122 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	@Unique
 	private InputSignal input_signal;
 	
+	@Unique
+	private void __incrActiveCnt()
+	{
+		final InputSignal signal = this.input_signal;
+		signal.active_count += 1;
+		if ( signal.active_count == 1 )
+		{
+			this.isDown = true;
+			signal.press_callbacks.forEach( Runnable::run );
+		}
+	}
+	
+	@Unique
+	private void __decrActiveCnt()
+	{
+		final InputSignal signal = this.input_signal;
+		signal.active_count -= 1;
+		if ( signal.active_count == 0 )
+		{
+			this.isDown = false;
+			signal.release_callbacks.forEach( Runnable::run );
+		}
+	}
+	
+	@Unique
+	private static boolean __checkActive( Input input )
+	{
+		final Type type = input.getType();
+		if ( type == Type.SCANCODE ) {
+			return ACTIVE_INPUTS.contains( input );
+		}
+		else
+		{
+			final Minecraft mc = Minecraft.getInstance();
+			final long window = mc.getWindow().getWindow();
+			final int code = input.getValue();
+			switch ( type )
+			{
+			case KEYSYM:
+				return InputMappings.isKeyDown( window, code );
+			case MOUSE:
+				return GLFW.glfwGetMouseButton( window, code ) == GLFW.GLFW_PRESS;
+			default:
+				throw new IllegalStateException();
+			}
+		}
+	}
+	
 	
 	/**
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Fix click only trigger one key maximum at each press.
 	 */
 	@Overwrite
 	public static void click( Input key )
 	{
-		UPDATE_TABLE.getOrDefault( key, Collections.emptyList() ).stream()
-			.filter( kb -> kb.getKeyBinding().isDown() )
-			.forEachOrdered( IKeyBinding::incrClickCount );
+		MAP.lookupAll( key ).stream()
+			.filter( KeyBinding::isDown )
+			.forEachOrdered( kb -> {
+				final KeyBindingMixin kbm = ( KeyBindingMixin ) ( Object ) kb;
+				final KeyBindingMixin delegate = ( KeyBindingMixin ) kbm.getDelegate();
+				delegate.clickCount += 1;
+			} );
 	}
 	
 	/**
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Add combo keys support and priority handling.
 	 */
 	@Overwrite
+	@SuppressWarnings( "DataFlowIssue" )
 	public static void set( Input key, boolean is_down )
 	{
 		if ( !is_down )
 		{
-			ACTIVE_INPUTS.remove( key );
-			UPDATE_TABLE.getOrDefault( key, Collections.emptyList() )
-				.forEach( kb -> kb.getKeyBinding().setDown( false ) );
+			if ( ACTIVE_INPUTS.remove( key ) ) {
+				MAP.lookupAll( key ).forEach( kb -> kb.setDown( false ) );
+			}
 			return;
 		}
 		
-		final boolean is_already_active = !ACTIVE_INPUTS.add( key );
-		if ( is_already_active ) {
+		final boolean is_repeat_event = !ACTIVE_INPUTS.add( key );
+		if ( is_repeat_event ) {
 			return;
 		}
 		
-		final Iterator< IKeyBinding > itr = UPDATE_TABLE.getOrDefault( key, Collections.emptyList() ).iterator();
+		final Iterator< KeyBinding > itr = MAP.lookupAll( key ).iterator();
 		while ( itr.hasNext() )
 		{
-			final IKeyBinding kb = itr.next();
-			final IKeyConflictContext ctx = kb.getKeyBinding().getKeyConflictContext();
+			final KeyBinding kb = itr.next();
+			final IKeyConflictContext ctx = kb.getKeyConflictContext();
 			if ( !ctx.isActive() ) {
 				continue;
 			}
 			
-			final ImmutableSet< Input > cmb_keys = kb.getCmbKeys();
+			final KeyBindingMixin kbm = ( KeyBindingMixin ) ( Object ) kb;
+			final ImmutableSet< Input > cmb_keys = kbm.getCmbKeys();
 			if ( !ACTIVE_INPUTS.containsAll( cmb_keys ) ) {
 				continue;
 			}
 			
-			kb.getKeyBinding().setDown( true );
+			kb.setDown( true );
+			
 			final int priority = cmb_keys.size();
 			while ( itr.hasNext() )
 			{
-				final IKeyBinding after_kb = itr.next();
-				final ImmutableSet< Input > after_cmb_keys = after_kb.getCmbKeys();
-				final int after_priority = after_cmb_keys.size();
-				if ( after_priority != priority ) {
+				final KeyBindingMixin kbm1 = ( KeyBindingMixin ) ( Object ) itr.next();
+				final ImmutableSet< Input > cmb_keys1 = kbm1.getCmbKeys();
+				final int priority1 = cmb_keys1.size();
+				if ( priority1 != priority ) {
 					break;
 				}
 				
-				final IKeyConflictContext after_ctx = after_kb.getKeyBinding().getKeyConflictContext();
-				if ( after_ctx.isActive() && ACTIVE_INPUTS.containsAll( after_cmb_keys ) ) {
-					after_kb.getKeyBinding().setDown( true );
+				final IKeyConflictContext ctx1 = kbm1.getKeyConflictContext();
+				if ( ctx1.isActive() && ACTIVE_INPUTS.containsAll( cmb_keys1 ) ) {
+					kbm1.setDown( true );
 				}
 			}
 			break;
@@ -173,78 +206,46 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	
 	/**
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Go through {@link #ACTIVE_INPUTS} and update key bindings.
 	 */
 	@Overwrite
 	public static void setAll()
 	{
-		// Copied from overwrite method. It seems that the original \
+		// Copied from overwrite method. It seems that the original
 		// implementation only cares about the keyboard keys.
 		final Minecraft mc = Minecraft.getInstance();
 		final long window_handle = mc.getWindow().getWindow();
-		ACTIVE_INPUTS.removeIf( input -> {
-			final boolean is_still_active = (
-				input.getType() == Type.KEYSYM // && input != InputMappings.UNKNOWN
-				&& InputMappings.isKeyDown( window_handle, input.getValue() )
-			);
-			if ( is_still_active ) {
-				return false;
-			}
-			
-			UPDATE_TABLE.getOrDefault( input, Collections.emptyList() ).stream()
-				.map( IPatchedKeyBinding::getKeyBinding )
-				.filter( KeyBinding::isDown )
-				.forEachOrdered( kb -> kb.setDown( false ) );
-			return true;
-		} );
-	}
-	
-	/**
-	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
-	 */
-	@Overwrite
-	public static void releaseAll() {
-		UPDATE_TABLE.values().forEach( lst -> lst.forEach( IKeyBinding::resetKey ) );
-	}
-	
-	/**
-	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
-	 */
-	@Overwrite
-	public static void resetMapping()
-	{
-		MAP.clearMap();
-		UPDATE_TABLE.clear();
-		
-		final GameSettings options = Minecraft.getInstance().options;
-		// This will be called in GameSettings' constructor, hence it is \
-		// possible that settings is null here. If it is null, then shadow \
-		// key bindings have not been created yet, so safe to use #ALL.
-		final boolean is_options_created = options != null;
-		final Stream< KeyBinding > kb_stream = (
-			is_options_created
-			? Arrays.stream( options.keyMappings )
-			: ALL.values().stream()
+		final List< Input > inactive_inputs = (
+			ACTIVE_INPUTS.stream()
+			.filter( input -> {
+				final boolean is_still_active = (
+					input.getType() == Type.KEYSYM // && input != InputMappings.UNKNOWN
+					&& InputMappings.isKeyDown( window_handle, input.getValue() )
+				);
+				return !is_still_active;
+			} )
+			.collect( Collectors.toList() )
 		);
-		kb_stream.filter( kb -> kb.getKey() != InputMappings.UNKNOWN )
-			.forEachOrdered( KeyBindingMixin::__regisToUpdateTable );
+		
+		inactive_inputs.forEach( ACTIVE_INPUTS::remove );
+		inactive_inputs.stream()
+			.map( MAP::lookupAll )
+			.flatMap( Collection::stream )
+			.forEachOrdered( kb -> kb.setDown( false ) );
 	}
 	
-	@Unique
-	private static void __regisToUpdateTable( KeyBinding kb )
+	/**
+	 * @author Giant_Salted_Fish
+	 * @reason Clear {@link #ACTIVE_INPUTS} and reset key bindings.
+	 */
+	@Overwrite
+	@SuppressWarnings( "DataFlowIssue" )
+	public static void releaseAll()
 	{
-		final IKeyBinding ikb = ( IKeyBinding ) kb;
-		UPDATE_TABLE.compute( kb.getKeyBinding().getKey(), ( k, lst ) -> {
-			final List< IKeyBinding > update_lst = lst != null ? lst : new ArrayList<>();
-			final List< Integer > priority_lst = Lists.transform( update_lst, o -> o.getCmbKeys().size() );
-			
-			final int priority = ikb.getCmbKeys().size();
-			final int idx = Collections.binarySearch( Lists.reverse( priority_lst ), priority );
-			final int insert_idx = update_lst.size() - ( idx < 0 ? -idx - 1 : idx );
-			update_lst.add( insert_idx, ikb );
-			return update_lst;
+		ACTIVE_INPUTS.clear();
+		ALL.values().forEach(  kb -> {
+			final KeyBindingMixin kbm = ( KeyBindingMixin ) ( Object ) kb;
+			kbm.release();
 		} );
 	}
 	
@@ -254,17 +255,19 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 		at = @At( "RETURN" )
 	)
 	private void onNew(
-		String p_i47675_1_,
-		Type p_i47675_2_,
-		int p_i47675_3_,
-		String p_i47675_4_,
+		String name,
+		Type input_type,
+		int key_code,
+		String category,
 		CallbackInfo ci
 	) {
-		this.input_signal = InputSignal.of( p_i47675_1_ );
+		if ( !IKeyBindingImpl.isShadowKeyBinding( this.getKeyBinding() ) ) {
+			this.input_signal = new InputSignal();
+		}
 		
-		final ImmutableSet< Input > cmb_keys = ImmutableSet.of();
-		this.default_cmb_keys = cmb_keys;
-		this.current_cmb_keys = cmb_keys;
+		final ImmutableSet< Input > empty = ImmutableSet.of();
+		this.default_cmb_keys = empty;
+		this.current_cmb_keys = empty;
 	}
 	
 	@Inject(
@@ -272,61 +275,49 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 		at = @At( "RETURN" )
 	)
 	private void onNew(
-		String description,
-		IKeyConflictContext keyConflictContext,
-		KeyModifier keyModifier,
-		Input keyCode,
+		String name,
+		IKeyConflictContext conflict_context,
+		KeyModifier modifier,
+		Input input,
 		String category,
 		CallbackInfo ci
 	) {
-		this.input_signal = InputSignal.of( description );
+		this.input_signal = new InputSignal();
 		
-		final ImmutableSet< Input > cmb_keys = MODIFIER_2_CMB_KEYS.get( keyModifier );
-		this.default_cmb_keys = cmb_keys;
-		this.current_cmb_keys = cmb_keys;
-		
-		// Modifier will be ignored in the rest of the part.
-		this.keyModifierDefault = KeyModifier.NONE;
-		this.keyModifier = KeyModifier.NONE;
+		final KeyModifier resolved = this.keyModifier;
+		final ImmutableSet< Input > cmb_keys = IKeyBindingImpl.toCmbKeySet( resolved );
+		if ( !cmb_keys.isEmpty() )
+		{
+			// We have been added to the MAP when cmb keys is empty in super().
+			// So redo MAP add after we set up cmb keys.
+			final KeyBinding self = this.getKeyBinding();
+			MAP.removeKey( self );
+			this.default_cmb_keys = cmb_keys;
+			this.current_cmb_keys = cmb_keys;
+			MAP.addKey( input, self );
+		}
+		else
+		{
+			this.default_cmb_keys = cmb_keys;
+			this.current_cmb_keys = cmb_keys;
+		}
 	}
 	
 	/**
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
-	 */
-	@Overwrite
-	public boolean isDown() {
-		return this.input_signal.active_count > 0;
-	}
-	
-	/**
-	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
-	 */
-	@Overwrite
-	public boolean consumeClick()
-	{
-		final InputSignal input_signal = this.input_signal;
-		final boolean flag = input_signal.click_count > 0;
-		input_signal.click_count -= flag ? 1 : 0;
-		return flag;
-	}
-	
-	/**
-	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Proxy to delegate for shadow key binding.
 	 */
 	@Overwrite
 	private void release()
 	{
+		final KeyBindingMixin delegate = ( KeyBindingMixin ) this.getDelegate();
+		delegate.clickCount = Math.max( 0, delegate.clickCount - 1 );
 		this.setDown( false );
-		final InputSignal input_signal = this.input_signal;
-		input_signal.click_count -= input_signal.click_count > 0 ? 1 : 0;
 	}
 	
 	/**
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Need to check cmb keys for conflicts.
 	 */
 	@Overwrite
 	public boolean same( KeyBinding other )
@@ -338,20 +329,56 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 			return false;
 		}
 		
-		final IPatchedKeyBinding other_ = ( IPatchedKeyBinding ) other;
+		final KeyBindingMixin okbm = ( KeyBindingMixin ) ( Object ) other;
 		final ImmutableSet< Input > cmb0 = this.getCmbKeys();
-		final ImmutableSet< Input > cmb1 = other_.getCmbKeys();
+		final ImmutableSet< Input > cmb1 = okbm.getCmbKeys();
 		final Input key0 = this.getKey();
 		final Input key1 = other.getKey();
 		return (
 			cmb0.contains( key1 ) || cmb1.contains( key0 )
-			|| key0.equals( key1 ) && cmb0.equals( cmb1 )
+			|| ( key0.equals( key1 ) && cmb0.equals( cmb1 ) )
+		);
+	}
+	
+	/**
+	 * @see #isActiveAndMatches(Input)
+	 * @author Giant_Salted_Fish
+	 * @reason Need to also check cmb keys.
+	 */
+	@Overwrite
+	public boolean matches( int key_code, int scancode )
+	{
+		// TODO: Should we check context?
+		final Input key = this.getKey();
+		final Type type = key.getType();
+		final int value = key.getValue();
+		final boolean key_match = (
+			key_code == InputMappings.UNKNOWN.getValue()
+			? type == Type.SCANCODE && value == scancode
+			: type == Type.KEYSYM && value == key_code
+		);
+		return key_match && this.getCmbKeys().stream().allMatch( KeyBindingMixin::__checkActive );
+	}
+	
+	/**
+	 * @see #isActiveAndMatches(Input)
+	 * @author Giant_Salted_Fish
+	 * @reason Need to also check cmb keys.
+	 */
+	@Overwrite
+	public boolean matchesMouse( int button )
+	{
+		final Input key = this.getKey();
+		return (
+			key.getType() == Type.MOUSE
+			&& key.getValue() == button
+			&& this.getCmbKeys().stream().allMatch( KeyBindingMixin::__checkActive )
 		);
 	}
 	
 	/**
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Display cmb keys rather than the modifier.
 	 */
 	@Overwrite
 	public ITextComponent getTranslatedKeyMessage()
@@ -366,7 +393,7 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	
 	/**
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Check cmb keys as well.
 	 */
 	@Overwrite
 	public boolean isDefault()
@@ -378,41 +405,59 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	/**
+	 * This format is design to be compatible with vanilla key saving, so that
+	 * player can still have their key settings after removing this mod.
+	 *
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Set cmb keys as well.
+	 */
+	@Overwrite
+	public String saveString()
+	{
+		final String key = this.getKey().getName();
+		final String modifier = this.getKeyModifier().toString();
+		final String cmb_keys = this.getCmbKeys().stream().map( Input::getName ).collect( Collectors.joining( "+" ) );
+		return String.join( ":", key, modifier, cmb_keys );
+	}
+	
+	/**
+	 * @author Giant_Salted_Fish
+	 * @reason Proxy to delegate for shadow key bindings.
 	 */
 	@Overwrite
 	public void setDown( boolean is_down )
 	{
-		// Although our implementation can guarantee the #setDown(boolean) \
-		// will only be called when the active state of the key is changed, \
-		// we still have to check before firing callbacks as #setDown(boolean) \
-		// is a public method and can be called by any other mods.
 		if ( is_down )
 		{
-			if ( !this.isDown )
+			if ( !this.is_active )
 			{
-				this.isDown = true;
-				this.input_signal.increaseActiveCount();
+				this.is_active = true;
+				final KeyBindingMixin delegate = ( KeyBindingMixin ) this.getDelegate();
+				delegate.__incrActiveCnt();
 			}
 		}
 		else
 		{
-			if ( this.isDown )
+			if ( this.is_active )
 			{
-				this.isDown = false;
-				this.input_signal.reduceActiveCount();
+				this.is_active = false;
+				final KeyBindingMixin delegate = ( KeyBindingMixin ) this.getDelegate();
+				delegate.__decrActiveCnt();
 			}
 		}
 	}
 	
+	/**
+	 * This method is mainly being used in GUI codes where key bindings are not
+	 * being updated by {@link #set(Input, boolean)}.
+	 */
 	@Override
-	public boolean isActiveAndMatches( Input keyCode )
+	public boolean isActiveAndMatches( Input key )
 	{
 		return (
-			keyCode != InputMappings.UNKNOWN
-			&& this.getKey().equals( keyCode )
-			&& ACTIVE_INPUTS.containsAll( this.getCmbKeys() )
+			key != InputMappings.UNKNOWN
+			&& key.equals( this.getKey() )
+			&& this.getCmbKeys().stream().allMatch( KeyBindingMixin::__checkActive )
 			&& this.getKeyConflictContext().isActive()
 		);
 	}
@@ -423,17 +468,10 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	}
 	
 	@Override
-	public void setKeyModifierAndCode( KeyModifier keyModifier, Input keyCode ) {
-		this.setKeyAndCmbKeys( keyCode, MODIFIER_2_CMB_KEYS.get( keyModifier ) );
-	}
-	
-	@Override
-	public boolean isConflictContextAndModifierActive()
+	public void setKeyModifierAndCode( KeyModifier modifier, Input key )
 	{
-		return (
-			this.getKeyConflictContext().isActive()
-			&& ACTIVE_INPUTS.containsAll( this.getCmbKeys() )
-		);
+		final KeyModifier resolved = modifier.matches( key ) ? KeyModifier.NONE : modifier;
+		this.setKeyAndCmbKeys( key, IKeyBindingImpl.toCmbKeySet( resolved ) );
 	}
 	
 	@Override
@@ -446,9 +484,9 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 			return false;
 		}
 		
-		final IPatchedKeyBinding other_ = ( IPatchedKeyBinding ) other;
+		final KeyBindingMixin okbm = ( KeyBindingMixin ) ( Object ) other;
 		final ImmutableSet< Input > cmb0 = this.getCmbKeys();
-		final ImmutableSet< Input > cmb1 = other_.getCmbKeys();
+		final ImmutableSet< Input > cmb1 = okbm.getCmbKeys();
 		final Input key0 = this.getKey();
 		final Input key1 = other.getKey();
 		return cmb0.contains( key1 ) || cmb1.contains( key0 );
@@ -458,46 +496,27 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public final void initDefaultCmbKeys( ImmutableSet< Input > cmb_keys )
 	{
-		this.default_cmb_keys = cmb_keys;
-		this.current_cmb_keys = cmb_keys;
+		if ( !cmb_keys.isEmpty() )
+		{
+			assert !cmb_keys.contains( this.getKey() );
+			final KeyBinding self = this.getKeyBinding();
+			MAP.removeKey( self );
+			
+			this.default_cmb_keys = cmb_keys;
+			this.current_cmb_keys = cmb_keys;
+			
+			final KeyModifier modifier = IKeyBindingImpl.toModifier( cmb_keys );
+			this.keyModifierDefault = modifier;
+			this.keyModifier = modifier;
+			
+			MAP.addKey( this.getKey(), self );
+		}
 	}
 	
 	@Override
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public final void incrClickCount() {
-		this.input_signal.click_count += 1;
-	}
-	
-	@Override
-	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public final void resetKey() {
-		this.release();
-	}
-	
-	@Override
-	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public String getSaveKey() {
-		return this.getName();
-	}
-	
-	@Override
-	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public boolean isShadowKeyBinding() {
-		return false;
-	}
-	
-	@Override
-	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public KeyBinding createShadowCopy( int index )
-	{
-		return new ShadowKeyBinding(
-			this.getName(),
-			this.getKeyConflictContext(),
-			InputMappings.UNKNOWN,
-			ImmutableSet.of(),
-			this.getCategory(),
-			index
-		);
+	public Object getDelegate() {
+		return this;
 	}
 	
 	@Override
@@ -516,8 +535,10 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public void setKeyAndCmbKeys( Input key, ImmutableSet< Input > cmb_keys )
 	{
+		assert !cmb_keys.contains( key );
 		this.setKey( key );
 		this.current_cmb_keys = cmb_keys;
+		this.keyModifier = IKeyBindingImpl.toModifier( cmb_keys );
 	}
 	
 	@Override
@@ -542,13 +563,5 @@ public abstract class KeyBindingMixin implements IKeyBinding, IForgeKeybinding
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public boolean removeReleaseCallback( Runnable callback ) {
 		return this.input_signal.release_callbacks.remove( callback );
-	}
-	
-	@Override
-	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public KeyBinding getKeyBinding()
-	{
-		final Object o = this;
-		return ( KeyBinding ) o;
 	}
 }
