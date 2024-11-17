@@ -133,13 +133,7 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 		final Iterator< KeyBinding > itr = HASH.lookupAll( key ).iterator();
 		while ( itr.hasNext() )
 		{
-			final KeyBinding kb = itr.next();
-			final IKeyConflictContext ctx = kb.getKeyConflictContext();
-			if ( !ctx.isActive() ) {
-				continue;
-			}
-			
-			final KeyBindingMixin kbm = ( KeyBindingMixin ) ( Object ) kb;
+			final KeyBindingMixin kbm = ( KeyBindingMixin ) ( Object ) itr.next();
 			final ImmutableSet< Integer > cmb_keys = kbm.getCmbKeys();
 			if ( !cmb_keys.stream().allMatch( IKeyBindingImpl::isKeyDown ) ) {
 				continue;
@@ -157,8 +151,7 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 					break;
 				}
 				
-				final IKeyConflictContext ctx1 = kbm1.getKeyConflictContext();
-				if ( ctx1.isActive() && cmb_keys1.stream().allMatch( IKeyBindingImpl::isKeyDown ) ) {
+				if ( cmb_keys1.stream().allMatch( IKeyBindingImpl::isKeyDown ) ) {
 					kbm1.pressKey();
 				}
 			}
