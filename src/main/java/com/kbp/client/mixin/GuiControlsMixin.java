@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.Unique;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.stream.Collectors;
 
 @Mixin( GuiControls.class )
 public abstract class GuiControlsMixin extends GuiScreen
@@ -106,9 +107,7 @@ public abstract class GuiControlsMixin extends GuiScreen
 	{
 		final IPatchedKeyBinding ikb = ( IPatchedKeyBinding ) this.buttonId;
 		final int key = MoreObjects.firstNonNull( this.active_keys.peek(), Keyboard.KEY_NONE );
-		final ImmutableSet< Integer > cmb_keys = ImmutableSet.copyOf(
-			this.active_keys.stream().skip( 1 ).iterator()
-		);
+		final ImmutableSet< Integer > cmb_keys = this.active_keys.stream().skip( 1 ).collect( ImmutableSet.toImmutableSet() );
 		ikb.setKeyAndCmbKeys( key, cmb_keys );
 		this.options.setOptionKeyBinding( this.buttonId, key );
 		KeyBinding.resetKeyBindingArrayAndHash();

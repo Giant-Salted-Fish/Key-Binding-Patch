@@ -11,10 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin( GuiModList.class )
 public abstract class GuiModListMixin extends GuiScreen
 {
-	@Inject(
-		method = "initGui",
-		at = @At( "RETURN" )
-	)
+	@Inject( method = "initGui", at = @At( "RETURN" ) )
 	private void onInitGui( CallbackInfo ci ) {
 		Keyboard.enableRepeatEvents( true );  // For mod search input.
 	}

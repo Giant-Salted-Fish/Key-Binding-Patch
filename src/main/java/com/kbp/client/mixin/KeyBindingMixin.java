@@ -54,9 +54,6 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 	@Shadow( remap = false )
 	public abstract IKeyConflictContext getKeyConflictContext();
 	
-	@Shadow( remap = false )
-	public abstract KeyModifier getKeyModifierDefault();
-	
 	
 	// >>> Unique Fields and Methods <<<
 	/**
@@ -199,7 +196,8 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 	) {
 		this.input_signal = new InputSignal();
 		
-		final ImmutableSet< Integer > cmb_keys = IKeyBindingImpl.toCmbKeySet( modifier );
+		final KeyModifier resolved = this.keyModifier;
+		final ImmutableSet< Integer > cmb_keys = IKeyBindingImpl.toCmbKeySet( resolved );
 		if ( !cmb_keys.isEmpty() )
 		{
 			// We have been added to the HASH when cmb keys is empty in super().
@@ -254,8 +252,9 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 	@Overwrite( remap = false )
 	public void setKeyModifierAndCode( KeyModifier modifier, int key_code )
 	{
-		this.setKeyAndCmbKeys( key_code, IKeyBindingImpl.toCmbKeySet( modifier ) );
-		this.keyModifier = modifier.matches( key_code ) ? KeyModifier.NONE : modifier;
+		final KeyModifier resolved = modifier.matches( key_code ) ? KeyModifier.NONE : modifier;
+		this.setKeyAndCmbKeys( key_code, IKeyBindingImpl.toCmbKeySet( resolved ) );
+		this.keyModifier = resolved;
 	}
 	
 	/**
@@ -263,10 +262,8 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 	 * @reason Set cmb keys as well.
 	 */
 	@Overwrite( remap = false )
-	public void setToDefault()
-	{
+	public void setToDefault() {
 		this.setKeyAndCmbKeys( this.getKeyCodeDefault(), this.getDefaultCmbKeys() );
-		this.keyModifier = this.getKeyModifierDefault();
 	}
 	
 	/**
@@ -373,6 +370,7 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 	{
 		if ( !cmb_keys.isEmpty() )
 		{
+			assert !cmb_keys.contains( this.getKeyCode() );
 			final KeyBinding self = this.getKeyBinding();
 			HASH.removeKey( self );
 			
@@ -409,8 +407,10 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public void setKeyAndCmbKeys( int key, ImmutableSet< Integer > cmb_keys )
 	{
+		assert !cmb_keys.contains( key );
 		this.setKeyCode( key );
 		this.current_cmb_keys = cmb_keys;
+		this.keyModifier = IKeyBindingImpl.toModifier( cmb_keys );
 	}
 	
 	@Override
