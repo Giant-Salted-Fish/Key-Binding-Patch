@@ -1,11 +1,12 @@
 package com.kbp.client.mixin;
 
+import com.kbp.client.api.IPatchedKeyMapping;
 import com.kbp.client.impl.ActiveKeyTracker;
-import com.kbp.client.impl.IKeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.screens.OptionsSubScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -30,9 +31,12 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 	private KeyBindsList keyBindsList;
 	
 	
-	// It turns out that Forge will automatically set #selectedKey to null in
-	// certain circumstances when keyboard key is released, so we have to
-	// manually copy the reference to use.
+	/**
+	 * It turns out that Forge will automatically set {@link #selectedKey} to
+	 * {@code null} in {@link KeyboardHandler#keyPress(long, int, int, int, int)}
+	 * under certain circumstances when keyboard key is released, so we have to
+	 * manually copy the reference to use.
+	 */
 	@Unique
 	private KeyMapping shadow_selected_key;
 	
@@ -111,7 +115,7 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 	@Unique
 	private void __updateSelectedKeyBinding()
 	{
-		final var ikm = ( IKeyMapping ) this.shadow_selected_key;
+		final var ikm = ( IPatchedKeyMapping ) this.shadow_selected_key;
 		final var key = this.key_tracker.getKey();
 		ikm.setKeyAndCmbKeys( key, this.key_tracker.getCmbKeys() );
 		this.options.setKey( this.shadow_selected_key, key );

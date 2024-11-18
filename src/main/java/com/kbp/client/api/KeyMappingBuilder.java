@@ -30,7 +30,8 @@ public abstract class KeyMappingBuilder
 	 * @see KBPMod#newBuilder(String)
 	 * @see KBPMod#newToggleableBuilder(String, BooleanSupplier)
 	 */
-	public KeyMappingBuilder() { }
+	public KeyMappingBuilder() {
+	}
 	
 	public KeyMappingBuilder withCategory( String category )
 	{

@@ -2,7 +2,6 @@ package com.kbp.client.impl;
 
 import com.google.common.collect.ImmutableSet;
 import com.kbp.client.KBPMod;
-import com.kbp.client.api.IPatchedKeyMapping;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.client.ToggleKeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
@@ -15,9 +14,9 @@ import java.util.function.BooleanSupplier;
  * as this implementation is not guaranteed to present in all version.
  */
 @OnlyIn( Dist.CLIENT )
-public class PatchedToggleableKeyMapping extends ToggleKeyMapping implements IPatchedKeyMapping
+public class PatchedToggleKeyMapping extends ToggleKeyMapping
 {
-	public PatchedToggleableKeyMapping(
+	public PatchedToggleKeyMapping(
 		String description,
 		int key_code,
 		ImmutableSet< Key > cmb_keys,
@@ -26,7 +25,7 @@ public class PatchedToggleableKeyMapping extends ToggleKeyMapping implements IPa
 	) {
 		super( description, key_code, category, toggle_controller );
 		
-		final var km = ( IKeyMapping ) this;
+		final var km = ( IKeyMappingImpl ) this;
 		km.initDefaultCmbKeys( cmb_keys );
 	}
 }

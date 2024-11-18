@@ -1,18 +1,15 @@
 package com.kbp.client.mixin;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.kbp.client.api.IPatchedKeyMapping;
-import com.kbp.client.impl.IKeyMapping;
+import com.kbp.client.impl.IKeyMappingImpl;
 import com.kbp.client.impl.InputSignal;
-import com.kbp.client.impl.ShadowKeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import com.mojang.blaze3d.platform.InputConstants.Type;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.client.extensions.IForgeKeyMapping;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyMappingLookup;
 import net.minecraftforge.client.settings.KeyModifier;
@@ -28,32 +25,27 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Mixin( KeyMapping.class )
-public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
+public abstract class KeyMappingMixin implements IKeyMappingImpl, IPatchedKeyMapping
 {
-	// >>> Shadow fields and methods <<<
+	// >>> Shadow Fields and Methods <<<
 	@Shadow
-	@Final
-	private static Map< String, KeyMapping > ALL;
+	private static @Final Map< String, KeyMapping > ALL;
 	
 	@Shadow
-	@Final
-	private static KeyMappingLookup MAP;
+	private static @Final KeyMappingLookup MAP;
 	
 	@Shadow
 	boolean isDown;
+	
+	@Shadow
+	private int clickCount;
 	
 	@Shadow( remap = false )
 	private KeyModifier keyModifier;
@@ -62,38 +54,18 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	private KeyModifier keyModifierDefault;
 	
 	@Shadow
-	public abstract String getCategory();
-	
-	@Shadow
-	public abstract String getName();
-	
-	@Shadow
 	public abstract Key getDefaultKey();
 	
 	@Shadow
-	public abstract void setKey( Key p_90849_ );
+	public abstract void setKey( Key key );
 	
 	
-	// >>> Unique fields <<<
-	@Unique
-	private static final HashMap< KeyModifier, ImmutableSet< Key > >
-		MODIFIER_2_CMB_KEYS = new HashMap<>();
-	static
-	{
-		final BiConsumer< KeyModifier, Integer > adder = ( modifier, key_code ) ->
-			MODIFIER_2_CMB_KEYS.put( modifier, ImmutableSet.of( Type.KEYSYM.getOrCreate( key_code ) ) );
-		adder.accept( KeyModifier.CONTROL, GLFW.GLFW_KEY_LEFT_CONTROL );
-		adder.accept( KeyModifier.SHIFT, GLFW.GLFW_KEY_LEFT_SHIFT );
-		adder.accept( KeyModifier.ALT, GLFW.GLFW_KEY_LEFT_ALT );
-		MODIFIER_2_CMB_KEYS.put( KeyModifier.NONE, ImmutableSet.of() );
-	}
-	
-	@Unique
-	private static final HashMap< Key, List< IKeyMapping > > UPDATE_TABLE = new HashMap<>();
-	
+	// >>> Unique Fields and Methods <<<
 	@Unique
 	private static final HashSet< Key > ACTIVE_KEYS = new HashSet<>();
 	
+	@Unique
+	private boolean is_active;
 	
 	@Unique
 	private ImmutableSet< Key > default_cmb_keys;
@@ -104,67 +76,118 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	@Unique
 	private InputSignal input_signal;
 	
+	@Unique
+	private void __incrActiveCnt()
+	{
+		final var signal = this.input_signal;
+		signal.active_count += 1;
+		if ( signal.active_count == 1 )
+		{
+			this.isDown = true;
+			signal.press_callbacks.forEach( Runnable::run );
+		}
+	}
+	
+	@Unique
+	private void __decrActiveCnt()
+	{
+		final var signal = this.input_signal;
+		signal.active_count -= 1;
+		if ( signal.active_count == 0 )
+		{
+			this.isDown = false;
+			signal.release_callbacks.forEach( Runnable::run );
+		}
+	}
+	
+	@Unique
+	private static boolean __checkActive( Key key )
+	{
+		final var type = key.getType();
+		if ( type == Type.SCANCODE ) {
+			return ACTIVE_KEYS.contains( key );
+		}
+		else
+		{
+			final var mc = Minecraft.getInstance();
+			final var window = mc.getWindow().getWindow();
+			final var code = key.getValue();
+			return switch ( type ) {
+				case KEYSYM -> InputConstants.isKeyDown( window, code );
+				case MOUSE -> GLFW.glfwGetMouseButton( window, code ) == GLFW.GLFW_PRESS;
+				case SCANCODE -> throw new IllegalStateException();
+			};
+		}
+	}
+	
 	
 	/**
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Fix click only trigger one key maximum at each press.
 	 */
 	@Overwrite
 	public static void click( Key key )
 	{
-		UPDATE_TABLE.getOrDefault( key, Collections.emptyList() ).stream()
-			.filter( km -> km.getKeyMapping().isDown() )
-			.forEachOrdered( IKeyMapping::incrClickCount );
+		MAP.getAll( key ).stream()
+			.filter( KeyMapping::isDown )
+			.forEachOrdered( km -> {
+				final var kmm = ( KeyMappingMixin ) ( Object ) km;
+				final var delegate = ( KeyMappingMixin ) kmm.getDelegate();
+				delegate.clickCount += 1;
+			} );
 	}
 	
 	/**
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Add combo keys support and priority handling.
 	 */
 	@Overwrite
+	@SuppressWarnings( "DataFlowIssue" )
 	public static void set( Key key, boolean is_down )
 	{
 		if ( !is_down )
 		{
-			ACTIVE_KEYS.remove( key );
-			UPDATE_TABLE.getOrDefault( key, Collections.emptyList() )
-				.forEach( km -> km.getKeyMapping().setDown( false ) );
+			if ( ACTIVE_KEYS.remove( key ) ) {
+				MAP.getAll( key ).forEach( km -> km.setDown( false ) );
+			}
 			return;
 		}
 		
-		final var is_already_active = !ACTIVE_KEYS.add( key );
-		if ( is_already_active ) {
+		final var is_repeat_event = !ACTIVE_KEYS.add( key );
+		if ( is_repeat_event ) {
 			return;
 		}
 		
-		final var itr = UPDATE_TABLE.getOrDefault( key, Collections.emptyList() ).iterator();
+		final var itr = MAP.getAll( key ).iterator();
 		while ( itr.hasNext() )
 		{
 			final var km = itr.next();
-			final var ctx = km.getKeyMapping().getKeyConflictContext();
+			final var ctx = km.getKeyConflictContext();
 			if ( !ctx.isActive() ) {
 				continue;
 			}
 			
-			final var cmb_keys = km.getCmbKeys();
+			final var kmm = ( KeyMappingMixin ) ( Object ) km;
+			final var cmb_keys = kmm.getCmbKeys();
 			if ( !ACTIVE_KEYS.containsAll( cmb_keys ) ) {
 				continue;
 			}
 			
-			km.getKeyMapping().setDown( true );
+			km.setDown( true );
+			
 			final var priority = cmb_keys.size();
 			while ( itr.hasNext() )
 			{
-				final var after_km = itr.next();
-				final var after_cmb_keys = after_km.getCmbKeys();
-				final var after_priority = after_cmb_keys.size();
-				if ( after_priority != priority ) {
+				final var kmm1 = ( KeyMappingMixin ) ( Object ) itr.next();
+				final var cmb_keys1 = kmm1.getCmbKeys();
+				final var priority1 = cmb_keys1.size();
+				if ( priority1 != priority ) {
 					break;
 				}
 				
-				final var after_ctx = after_km.getKeyMapping().getKeyConflictContext();
-				if ( after_ctx.isActive() && ACTIVE_KEYS.containsAll( after_cmb_keys ) ) {
-					after_km.getKeyMapping().setDown( true );
+				final var ctx1 = kmm1.getKeyConflictContext();
+				if ( ctx1.isActive() && ACTIVE_KEYS.containsAll( cmb_keys1 ) ) {
+					kmm1.setDown( true );
 				}
 			}
 			break;
@@ -173,79 +196,46 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	
 	/**
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Go through {@link #ACTIVE_KEYS} and update key bindings.
 	 */
 	@Overwrite
 	public static void setAll()
 	{
-		// Copied from overwrite method. It seems that the original \
+		// Copied from overwrite method. It seems that the original
 		// implementation only cares about the keyboard keys.
 		final var mc = Minecraft.getInstance();
 		final var window_handle = mc.getWindow().getWindow();
-		ACTIVE_KEYS.removeIf( key -> {
-			final var is_still_active = (
-				key.getType() != Type.KEYSYM // && key != InputConstants.UNKNOWN
-				&& InputConstants.isKeyDown( window_handle, key.getValue() )
-			);
-			if ( is_still_active ) {
-				return false;
-			}
-			
-			UPDATE_TABLE.getOrDefault( key, Collections.emptyList() ).stream()
-				.map( IPatchedKeyMapping::getKeyMapping )
-				.filter( KeyMapping::isDown )
-				.forEachOrdered( km -> km.setDown( false ) );
-			return true;
-		} );
-	}
-	
-	/**
-	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
-	 */
-	@Overwrite
-	public static void releaseAll() {
-		UPDATE_TABLE.values().forEach( lst -> lst.forEach( IKeyMapping::resetKey ) );
-	}
-	
-	/**
-	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
-	 */
-	@Overwrite
-	@SuppressWarnings( "ConstantValue" )
-	public static void resetMapping()
-	{
-		MAP.clear();
-		UPDATE_TABLE.clear();
-		
-		final var options = Minecraft.getInstance().options;
-		// This will be called in GameSettings' constructor, hence it is \
-		// possible that settings is null here. If it is null, then shadow \
-		// key bindings have not been created yet, so safe to use #ALL.
-		final var is_options_created = options != null;
-		final var km_stream = (
-			is_options_created
-			? Arrays.stream( options.keyMappings )
-			: ALL.values().stream()
+		final var inactive_keys = (
+			ACTIVE_KEYS.stream()
+			.filter( key -> {
+				final var is_still_active = (
+					key.getType() != Type.KEYSYM // && key != InputConstants.UNKNOWN
+					&& InputConstants.isKeyDown( window_handle, key.getValue() )
+				);
+				return !is_still_active;
+			} )
+			.toList()
 		);
-		km_stream.filter( km -> km.getKey() != InputConstants.UNKNOWN )
-			.forEachOrdered( KeyMappingMixin::__regisToUpdateTable );
+		
+		inactive_keys.forEach( ACTIVE_KEYS::remove );
+		inactive_keys.stream()
+			.map( MAP::getAll )
+			.flatMap( Collection::stream )
+			.forEachOrdered( km -> km.setDown( false ) );
 	}
 	
-	@Unique
-	private static void __regisToUpdateTable( KeyMapping km )
+	/**
+	 * @author Giant_Salted_Fish
+	 * @reason Clear {@link #ACTIVE_KEYS} and reset key mappings.
+	 */
+	@Overwrite
+	@SuppressWarnings( "DataFlowIssue" )
+	public static void releaseAll()
 	{
-		final var ikm = ( IKeyMapping ) km;
-		UPDATE_TABLE.compute( km.getKey(), ( k, lst ) -> {
-			final var update_lst = lst != null ? lst : new ArrayList< IKeyMapping >();
-			final var priority_lst = Lists.transform( update_lst, o -> o.getCmbKeys().size() );
-			
-			final var priority = ikm.getCmbKeys().size();
-			final var idx = Collections.binarySearch( Lists.reverse( priority_lst ), priority );
-			final var insert_idx = update_lst.size() - ( idx < 0 ? -idx - 1 : idx );
-			update_lst.add( insert_idx, ikm );
-			return update_lst;
+		ACTIVE_KEYS.clear();
+		ALL.values().forEach( km -> {
+			final var kmm = ( KeyMappingMixin ) ( Object ) km;
+			kmm.release();
 		} );
 	}
 	
@@ -255,17 +245,19 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 		at = @At( "RETURN" )
 	)
 	private void onNew(
-		String description,
+		String name,
 		Type type,
 		int keyCode,
 		String category,
 		CallbackInfo ci
 	) {
-		this.input_signal = InputSignal.of( description );
+		if ( !IKeyMappingImpl.isShadowKeyMapping( this.getKeyMapping() ) ) {
+			this.input_signal = new InputSignal();
+		}
 		
-		final var cmb_keys = ImmutableSet.< Key >of();
-		this.default_cmb_keys = cmb_keys;
-		this.current_cmb_keys = cmb_keys;
+		final var empty = ImmutableSet.< Key >of();
+		this.default_cmb_keys = empty;
+		this.current_cmb_keys = empty;
 	}
 	
 	@Inject(
@@ -273,61 +265,49 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 		at = @At( "RETURN" )
 	)
 	private void onNew(
-		String description,
-		IKeyConflictContext keyConflictContext,
-		KeyModifier keyModifier,
-		Key keyCode,
+		String name,
+		IKeyConflictContext conflict_context,
+		KeyModifier modifier,
+		Key key,
 		String category,
-		CallbackInfo info
+		CallbackInfo ci
 	) {
-		this.input_signal = InputSignal.of( description );
+		this.input_signal = new InputSignal();
 		
-		final var cmb_keys = MODIFIER_2_CMB_KEYS.get( keyModifier );
-		this.default_cmb_keys = cmb_keys;
-		this.current_cmb_keys = cmb_keys;
-		
-		// Modifier will be ignored in the rest of the part.
-		this.keyModifierDefault = KeyModifier.NONE;
-		this.keyModifier = KeyModifier.NONE;
+		final var resolved = this.keyModifier;
+		final var cmb_keys = IKeyMappingImpl.toCmbKeySet( resolved );
+		if ( !cmb_keys.isEmpty() )
+		{
+			// We have been added to the MAP when cmb keys is empty in super().
+			// So redo MAP add after we set up cmb keys.
+			final var self = this.getKeyMapping();
+			MAP.remove( self );
+			this.default_cmb_keys = cmb_keys;
+			this.current_cmb_keys = cmb_keys;
+			MAP.put( key, self );
+		}
+		else
+		{
+			this.default_cmb_keys = cmb_keys;
+			this.current_cmb_keys = cmb_keys;
+		}
 	}
 	
 	/**
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
-	 */
-	@Overwrite
-	public boolean isDown() {
-		return this.input_signal.active_count > 0;
-	}
-	
-	/**
-	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
-	 */
-	@Overwrite
-	public boolean consumeClick()
-	{
-		final var input_signal = this.input_signal;
-		final var flag = input_signal.click_count > 0;
-		input_signal.click_count -= flag ? 1 : 0;
-		return flag;
-	}
-	
-	/**
-	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Proxy to delegate for shadow key mapping.
 	 */
 	@Overwrite
 	private void release()
 	{
+		final var delegate = ( KeyMappingMixin ) this.getDelegate();
+		delegate.clickCount = Math.max( 0, delegate.clickCount - 1 );
 		this.setDown( false );
-		final var input_signal = this.input_signal;
-		input_signal.click_count -= input_signal.click_count > 0 ? 1 : 0;
 	}
 	
 	/**
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Need to check cmb keys for conflicts.
 	 */
 	@Overwrite
 	public boolean same( KeyMapping other )
@@ -339,20 +319,56 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 			return false;
 		}
 		
-		final var other_ = ( IPatchedKeyMapping ) other;
+		final var okmm = ( KeyMappingMixin ) ( Object ) other;
 		final var cmb0 = this.getCmbKeys();
-		final var cmb1 = other_.getCmbKeys();
+		final var cmb1 = okmm.getCmbKeys();
 		final var key0 = this.getKey();
 		final var key1 = other.getKey();
 		return (
 			cmb0.contains( key1 ) || cmb1.contains( key0 )
-			|| key0.equals( key1 ) && cmb0.equals( cmb1 )
+			|| ( key0.equals( key1 ) && cmb0.equals( cmb1 ) )
+		);
+	}
+	
+	/**
+	 * @see #isActiveAndMatches(Key)
+	 * @author Giant_Salted_Fish
+	 * @reason Need to also check cmb keys.
+	 */
+	@Overwrite
+	public boolean matches( int key_code, int scancode )
+	{
+		// TODO: Should we check context?
+		final var key = this.getKey();
+		final var type = key.getType();
+		final var value = key.getValue();
+		final var key_match = (
+			key_code == InputConstants.UNKNOWN.getValue()
+			? type == Type.SCANCODE && value == scancode
+			: type == Type.KEYSYM && value == key_code
+		);
+		return key_match && this.getCmbKeys().stream().allMatch( KeyMappingMixin::__checkActive );
+	}
+	
+	/**
+	 * @see #isActiveAndMatches(Key)
+	 * @author Giant_Salted_Fish
+	 * @reason Need to also check cmb keys.
+	 */
+	@Overwrite
+	public boolean matchesMouse( int button )
+	{
+		final var key = this.getKey();
+		return (
+			key.getType() == Type.MOUSE
+			&& key.getValue() == button
+			&& this.getCmbKeys().stream().allMatch( KeyMappingMixin::__checkActive )
 		);
 	}
 	
 	/**
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Display cmb keys rather than the modifier.
 	 */
 	@Overwrite
 	public Component getTranslatedKeyMessage()
@@ -367,7 +383,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	
 	/**
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Check cmb keys as well.
 	 */
 	@Overwrite
 	public boolean isDefault()
@@ -379,41 +395,59 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	}
 	
 	/**
+	 * This format is design to be compatible with vanilla key saving, so that
+	 * player can still have their key settings after removing this mod.
+	 *
 	 * @author Giant_Salted_Fish
-	 * @reason Patch logic.
+	 * @reason Set cmb keys as well.
+	 */
+	@Overwrite
+	public String saveString()
+	{
+		final var key = this.getKey().getName();
+		final var modifier = this.getKeyModifier().toString();
+		final var cmb_keys = this.getCmbKeys().stream().map( Key::getName ).collect( Collectors.joining("+") );
+		return String.join( ":", key, modifier, cmb_keys );
+	}
+	
+	/**
+	 * @author Giant_Salted_Fish
+	 * @reason Proxy to delegate for shadow key bindings.
 	 */
 	@Overwrite
 	public void setDown( boolean is_down )
 	{
-		// Although our implementation can guarantee the #setDown(boolean) \
-		// will only be called when the active state of the key is changed, \
-		// we still have to check before firing callbacks as #setDown(boolean) \
-		// is a public method and can be called by other mods.
 		if ( is_down )
 		{
-			if ( !this.isDown )
+			if ( !this.is_active )
 			{
-				this.isDown = true;
-				this.input_signal.increaseActiveCount();
+				this.is_active = true;
+				final var delegate = ( KeyMappingMixin ) this.getDelegate();
+				delegate.__incrActiveCnt();
 			}
 		}
 		else
 		{
-			if ( this.isDown )
+			if ( this.is_active )
 			{
-				this.isDown = false;
-				this.input_signal.reduceActiveCount();
+				this.is_active = false;
+				final var delegate = ( KeyMappingMixin ) this.getDelegate();
+				delegate.__decrActiveCnt();
 			}
 		}
 	}
 	
+	/**
+	 * This method is mainly being used in GUI codes where key bindings are not
+	 * being updated by {@link #set(Key, boolean)}.
+	 */
 	@Override
-	public boolean isActiveAndMatches( @Nonnull Key keyCode )
+	public boolean isActiveAndMatches( @NotNull Key key )
 	{
 		return (
-			keyCode != InputConstants.UNKNOWN
-			&& this.getKey().equals( keyCode )
-			&& ACTIVE_KEYS.containsAll( this.getCmbKeys() )
+			key != InputConstants.UNKNOWN
+			&& key.equals( this.getKey() )
+			&& this.getCmbKeys().stream().allMatch( KeyMappingMixin::__checkActive )
 			&& this.getKeyConflictContext().isActive()
 		);
 	}
@@ -424,25 +458,18 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	}
 	
 	@Override
-	public void setKeyModifierAndCode( @Nullable KeyModifier keyModifier, @NotNull Key keyCode )
+	public void setKeyModifierAndCode( @Nullable KeyModifier modifier, @NotNull Key key )
 	{
-		// This part related to the modification by Forge in KeyBindsList.KeyEntry \
-		// and it only presents in the production environment not in development \
-		// environment. In general, it will clear the binding of the key when player \
+		// This part related to the modification by Forge in KeyBindsList.KeyEntry
+		// and it only presents in the production environment not in development
+		// environment. In general, it will clear the binding of the key when player
 		// click and select the key mapping in the controls screen.
-		final var is_selected_in_key_binds_screen = keyModifier == null; // && keyCode == InputConstants.UNKNOWN;
-		if ( !is_selected_in_key_binds_screen ) {
-			this.setKeyAndCmbKeys( keyCode, MODIFIER_2_CMB_KEYS.get( keyModifier ) );
+		final var is_selected_in_key_binds_screen = modifier == null; // && keyCode == InputConstants.UNKNOWN;
+		if ( !is_selected_in_key_binds_screen )
+		{
+			final var resolved = modifier.matches( key ) ? KeyModifier.NONE : modifier;
+			this.setKeyAndCmbKeys( key, IKeyMappingImpl.toCmbKeySet( resolved ) );
 		}
-	}
-	
-	@Override
-	public boolean isConflictContextAndModifierActive()
-	{
-		return (
-			this.getKeyConflictContext().isActive()
-			&& ACTIVE_KEYS.containsAll( this.getCmbKeys() )
-		);
 	}
 	
 	@Override
@@ -455,9 +482,9 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 			return false;
 		}
 		
-		final var other_ = ( IPatchedKeyMapping ) other;
+		final var okmm = ( KeyMappingMixin ) ( Object ) other;
 		final var cmb0 = this.getCmbKeys();
-		final var cmb1 = other_.getCmbKeys();
+		final var cmb1 = okmm.getCmbKeys();
 		final var key0 = this.getKey();
 		final var key1 = other.getKey();
 		return cmb0.contains( key1 ) || cmb1.contains( key0 );
@@ -465,48 +492,29 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	
 	@Override
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public final void incrClickCount() {
-		this.input_signal.click_count += 1;
-	}
-	
-	@Override
-	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public final void initDefaultCmbKeys( ImmutableSet< Key > cmb_keys )
 	{
-		this.default_cmb_keys = cmb_keys;
-		this.current_cmb_keys = cmb_keys;
+		if ( !cmb_keys.isEmpty() )
+		{
+			assert !cmb_keys.contains( this.getKey() );
+			final var self = this.getKeyMapping();
+			MAP.remove( self );
+			
+			this.default_cmb_keys = cmb_keys;
+			this.current_cmb_keys = cmb_keys;
+			
+			final var modifier = IKeyMappingImpl.toModifier( cmb_keys );
+			this.keyModifierDefault = modifier;
+			this.keyModifier = modifier;
+			
+			MAP.put( this.getKey(), self );
+		}
 	}
 	
 	@Override
-	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public final void resetKey() {
-		this.release();
-	}
-	
-	@Override
-	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public String getSaveKey() {
-		return this.getName();
-	}
-	
-	@Override
-	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public boolean isShadowKeyMapping() {
-		return false;
-	}
-	
-	@Override
-	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public KeyMapping createShadowCopy( int index )
-	{
-		return new ShadowKeyMapping(
-			this.getName(),
-			this.getKeyConflictContext(),
-			InputConstants.UNKNOWN,
-			ImmutableSet.of(),
-			this.getCategory(),
-			index
-		);
+	@SuppressWarnings("AddedMixinMembersNamePattern")
+	public Object getDelegate() {
+		return this;
 	}
 	
 	@Override
@@ -525,8 +533,10 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
 	public void setKeyAndCmbKeys( Key key, ImmutableSet< Key > cmb_keys )
 	{
+		assert !cmb_keys.contains( key );
 		this.setKey( key );
 		this.current_cmb_keys = cmb_keys;
+		this.keyModifier = IKeyMappingImpl.toModifier( cmb_keys );
 	}
 	
 	@Override
@@ -555,9 +565,7 @@ public abstract class KeyMappingMixin implements IKeyMapping, IForgeKeyMapping
 	
 	@Override
 	@SuppressWarnings( "AddedMixinMembersNamePattern" )
-	public final KeyMapping getKeyMapping()
-	{
-		final Object o = this;
-		return ( KeyMapping ) o;
+	public final KeyMapping getKeyMapping() {
+		return ( KeyMapping ) ( Object ) this;
 	}
 }

@@ -2,7 +2,6 @@ package com.kbp.client.impl;
 
 import com.google.common.collect.ImmutableSet;
 import com.kbp.client.KBPMod;
-import com.kbp.client.api.IPatchedKeyMapping;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.client.KeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
@@ -14,18 +13,18 @@ import net.minecraftforge.client.settings.IKeyConflictContext;
  * not guaranteed to present in all version.
  */
 @OnlyIn( Dist.CLIENT )
-public class PatchedKeyMapping extends KeyMapping implements IPatchedKeyMapping
+public class PatchedKeyMapping extends KeyMapping
 {
 	public PatchedKeyMapping(
 		String description,
-		IKeyConflictContext key_conflict_context,
+		IKeyConflictContext conflict_context,
 		Key key,
 		ImmutableSet< Key > cmb_keys,
 		String category
 	) {
-		super( description, key_conflict_context, key, category );
+		super( description, conflict_context, key, category );
 		
-		final var ikb = ( IKeyMapping ) this;
-		ikb.initDefaultCmbKeys( cmb_keys );
+		final var ikm = ( IKeyMappingImpl ) this;
+		ikm.initDefaultCmbKeys( cmb_keys );
 	}
 }

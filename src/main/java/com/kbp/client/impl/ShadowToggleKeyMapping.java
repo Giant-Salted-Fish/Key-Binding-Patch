@@ -1,28 +1,32 @@
 package com.kbp.client.impl;
 
 import com.kbp.client.api.IPatchedKeyMapping;
-import com.mojang.blaze3d.platform.InputConstants;
+import com.kbp.client.mixin.ToggleKeyMappingAccess;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.ToggleKeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * Only used by internal shadow key bindings.
  */
 @OnlyIn( Dist.CLIENT )
-public final class ShadowKeyMapping extends KeyMapping implements IPatchedKeyMapping, IKeyMappingImpl
+public final class ShadowToggleKeyMapping
+	extends ToggleKeyMapping
+	implements IPatchedKeyMapping, IKeyMappingImpl
 {
 	public final KeyMapping target;
 	
-	public ShadowKeyMapping( KeyMapping target, int index )
+	public ShadowToggleKeyMapping( KeyMapping target, int index )
 	{
 		super(
 			String.format( "shadow#%s@%d", target.getName(), index ),
-			target.getKeyConflictContext(),
-			InputConstants.UNKNOWN,
-			target.getCategory()
+			GLFW.GLFW_KEY_UNKNOWN,
+			target.getCategory(),
+			( ( ToggleKeyMappingAccess ) target ).getNeedsToggle()
 		);
 		
 		this.target = target;
@@ -52,8 +56,8 @@ public final class ShadowKeyMapping extends KeyMapping implements IPatchedKeyMap
 	@Override
 	public void addPressCallback( Runnable callback )
 	{
-		final var delegate = ( IPatchedKeyMapping ) this.getDelegate();
-		delegate.addPressCallback( callback );
+		final var ikb = ( IPatchedKeyMapping ) this.target;
+		ikb.addPressCallback( callback );
 	}
 	
 	@Override

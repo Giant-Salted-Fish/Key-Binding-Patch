@@ -1,5 +1,6 @@
 package com.kbp.client.impl;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
@@ -29,10 +30,10 @@ public final class ActiveKeyTracker
 	}
 	
 	public Key getKey() {
-		return this.active_keys.isEmpty() ? InputConstants.UNKNOWN : this.active_keys.getFirst();
+		return MoreObjects.firstNonNull( this.active_keys.peekFirst(), InputConstants.UNKNOWN );
 	}
 	
 	public ImmutableSet< Key > getCmbKeys() {
-		return ImmutableSet.copyOf( this.active_keys.stream().skip( 1 ).iterator() );
+		return this.active_keys.stream().skip( 1 ).collect( ImmutableSet.toImmutableSet() );
 	}
 }

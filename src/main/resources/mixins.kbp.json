@@ -6,10 +6,13 @@
 	"mixins": [],
 	"client": [
 		"ClientModLoaderMixin",
+		"KeyBindsListMixin",
 		"KeyBindsScreenMixin",
+		"KeyEntryMixin",
+		"KeyMappingLookupMixin",
 		"KeyMappingMixin",
 		"OptionsMixin",
-		"ToggleKeyMappingMixin"
+		"ToggleKeyMappingAccess"
 	],
 	"injectors": {
 		"defaultRequire": 1

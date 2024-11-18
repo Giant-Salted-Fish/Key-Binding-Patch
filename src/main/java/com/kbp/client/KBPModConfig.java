@@ -28,5 +28,6 @@ public final class KBPModConfig
 		CONFIG_SPEC = builder.build();
 	}
 	
-	private KBPModConfig() { }
+	private KBPModConfig() {
+	}
 }
