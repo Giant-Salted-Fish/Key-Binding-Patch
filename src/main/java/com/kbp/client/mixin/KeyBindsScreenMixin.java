@@ -1,7 +1,8 @@
 package com.kbp.client.mixin;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
 import com.kbp.client.api.IPatchedKeyMapping;
-import com.kbp.client.impl.ActiveKeyTracker;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.Util;
@@ -19,6 +20,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.LinkedList;
 
 @Mixin( KeyBindsScreen.class )
 public abstract class KeyBindsScreenMixin extends OptionsSubScreen
@@ -40,7 +43,7 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 	private KeyMapping shadow_selected_key;
 	
 	@Unique
-	private final ActiveKeyTracker key_tracker = new ActiveKeyTracker();
+	private final LinkedList< Key > active_keys = new LinkedList<>();
 	
 	
 	public KeyBindsScreenMixin( Screen parent, Options settings, Component title ) {
@@ -67,13 +70,13 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 		
 		if ( key == GLFW.GLFW_KEY_ESCAPE )
 		{
-			this.key_tracker.resetTracking();
+			this.active_keys.clear();
 			this.__updateSelectedKeyBinding();
 		}
 		else
 		{
 			final Key active_key = InputConstants.getKey( key, scan_code );
-			this.key_tracker.addActive( active_key );
+			this.active_keys.addFirst( active_key );
 		}
 		
 		this.lastKeySelection = Util.getMillis();
@@ -88,7 +91,7 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 		}
 		
 		this.__updateSelectedKeyBinding();
-		this.key_tracker.resetTracking();
+		this.active_keys.clear();
 		return true;
 	}
 	
@@ -101,20 +104,20 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 		
 		this.shadow_selected_key = this.selectedKey;
 		final var key = InputConstants.Type.MOUSE.getOrCreate( button );
-		this.key_tracker.addActive( key );
+		this.active_keys.addFirst( key );
 		return true;
 	}
 	
 	@Override
 	public boolean mouseReleased( double x, double y, int button )
 	{
-		final var is_select_click_release = this.key_tracker.noKeyActive();
+		final var is_select_click_release = this.active_keys.isEmpty();
 		if ( this.shadow_selected_key == null || is_select_click_release ) {
 			return super.mouseReleased( x, y, button );
 		}
 		
 		this.__updateSelectedKeyBinding();
-		this.key_tracker.resetTracking();
+		this.active_keys.clear();
 		return true;
 	}
 	
@@ -122,8 +125,9 @@ public abstract class KeyBindsScreenMixin extends OptionsSubScreen
 	private void __updateSelectedKeyBinding()
 	{
 		final var ikm = ( IPatchedKeyMapping ) this.shadow_selected_key;
-		final var key = this.key_tracker.getKey();
-		ikm.setKeyAndCmbKeys( key, this.key_tracker.getCmbKeys() );
+		final var key = MoreObjects.firstNonNull( this.active_keys.peekFirst(), InputConstants.UNKNOWN );
+		final var cmb_keys = this.active_keys.stream().skip( 1 ).collect( ImmutableSet.toImmutableSet() );
+		ikm.setKeyAndCmbKeys( key, cmb_keys );
 		this.options.setKey( this.shadow_selected_key, key );
 		
 		this.shadow_selected_key = null;
