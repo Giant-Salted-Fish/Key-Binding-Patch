@@ -13,9 +13,7 @@ showAsResourcePack=false
 	logoFile="logo.png"
 	credits="All code contributors."
 	authors="Giant_Salted_Fish"
-	description='''
-Patches the vanilla key binding system to support better key combinations and resolve conflicts.
-'''
+	description="Patches the vanilla key binding system to support better key combinations and resolve conflicts."
 
 [[dependencies.key_binding_patch]]
 	modId="forge"
