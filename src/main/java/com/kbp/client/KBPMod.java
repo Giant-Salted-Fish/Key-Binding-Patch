@@ -4,7 +4,7 @@ import com.kbp.client.api.IPatchedKeyMapping;
 import com.kbp.client.api.KeyMappingBuilder;
 import com.kbp.client.gui.KBPConfigScreen;
 import com.kbp.client.impl.PatchedKeyMapping;
-import com.kbp.client.impl.PatchedToggleableKeyMapping;
+import com.kbp.client.impl.PatchedToggleKeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.client.KeyMapping;
@@ -85,7 +85,7 @@ public final class KBPMod
 			public IPatchedKeyMapping build()
 			{
 				final var default_key = this.key;
-				final PatchedToggleableKeyMapping tkm = new PatchedToggleableKeyMapping(
+				final PatchedToggleKeyMapping tkm = new PatchedToggleKeyMapping(
 					description,
 					InputConstants.UNKNOWN.getValue(),
 					this.cmb_keys,

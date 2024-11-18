@@ -66,8 +66,7 @@ public abstract class OptionsMixin
 	{
 		Arrays.stream( this.keyMappings )
 			.map( km -> {
-				final var name = km.getName();
-				final var save_key = "key_" + name;
+				final var save_key = "key_" + km.getName();
 				final var save_data = km.saveString();
 				final String read_data;
 				try {

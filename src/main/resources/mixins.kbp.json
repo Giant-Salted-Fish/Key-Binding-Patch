@@ -3,13 +3,12 @@
 	"package": "com.kbp.client.mixin",
 	"minVersion": "0.8",
 	"refmap": "mixins.kbp.refmap.json",
-	"mixins": [
-		"KeyBindingMapMixin"
-	],
+	"mixins": [],
 	"client": [
 		"ClientModLoaderMixin",
 		"KeyBindsListMixin",
 		"KeyBindsScreenMixin",
+		"KeyBindingMapMixin",
 		"KeyMappingMixin",
 		"OptionsMixin",
 		"ToggleKeyMappingAccess"

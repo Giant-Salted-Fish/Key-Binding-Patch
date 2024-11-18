@@ -14,9 +14,9 @@ import java.util.function.BooleanSupplier;
  * as this implementation is not guaranteed to present in all version.
  */
 @OnlyIn( Dist.CLIENT )
-public class PatchedToggleableKeyMapping extends ToggleKeyMapping
+public class PatchedToggleKeyMapping extends ToggleKeyMapping
 {
-	public PatchedToggleableKeyMapping(
+	public PatchedToggleKeyMapping(
 		String description,
 		int key_code,
 		ImmutableSet< Key > cmb_keys,

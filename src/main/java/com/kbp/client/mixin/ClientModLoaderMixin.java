@@ -4,7 +4,7 @@ import com.kbp.client.KBPMod;
 import com.kbp.client.KBPModConfig;
 import com.kbp.client.api.IPatchedKeyMapping;
 import com.kbp.client.impl.ShadowKeyMapping;
-import com.kbp.client.impl.ShadowToggleableKeyMapping;
+import com.kbp.client.impl.ShadowToggleKeyMapping;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.ToggleKeyMapping;
 import net.minecraftforge.client.ClientRegistry;
@@ -64,7 +64,7 @@ public abstract class ClientModLoaderMixin
 					final var is = IntStream.range( 0, cnt );
 					final IntFunction< KeyMapping > to_shadow = (
 						km instanceof ToggleKeyMapping
-						? i -> new ShadowToggleableKeyMapping( km, i )
+						? i -> new ShadowToggleKeyMapping( km, i )
 						: i -> new ShadowKeyMapping( km, i )
 					);
 					return is.mapToObj( to_shadow );

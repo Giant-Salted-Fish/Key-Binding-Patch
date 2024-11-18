@@ -36,7 +36,8 @@ public abstract class KeyBindsListMixin
 		method = "<init>",
 		at = @At(
 			value = "NEW",
-			target = "(Ljava/lang/String;)Lnet/minecraft/network/chat/TranslatableComponent;"
+			target = "(Ljava/lang/String;)Lnet/minecraft/network/chat/TranslatableComponent;",
+			ordinal = 1
 		)
 	)
 	private TranslatableComponent onNew$Invoke( String name )

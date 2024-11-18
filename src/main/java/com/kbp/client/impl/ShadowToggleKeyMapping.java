@@ -14,13 +14,13 @@ import org.lwjgl.glfw.GLFW;
  * Only used by internal shadow key bindings.
  */
 @OnlyIn( Dist.CLIENT )
-public final class ShadowToggleableKeyMapping
+public final class ShadowToggleKeyMapping
 	extends ToggleKeyMapping
 	implements IPatchedKeyMapping, IKeyMappingImpl
 {
 	public final KeyMapping target;
 	
-	public ShadowToggleableKeyMapping( KeyMapping target, int index )
+	public ShadowToggleKeyMapping( KeyMapping target, int index )
 	{
 		super(
 			String.format( "shadow#%s@%d", target.getName(), index ),

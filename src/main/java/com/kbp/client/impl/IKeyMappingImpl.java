@@ -81,7 +81,7 @@ public interface IKeyMappingImpl
 	}
 	
 	static boolean isShadowKeyMapping( KeyMapping km ) {
-		return km instanceof ShadowKeyMapping || km instanceof ShadowToggleableKeyMapping;
+		return km instanceof ShadowKeyMapping || km instanceof ShadowToggleKeyMapping;
 	}
 	
 	static Optional< KeyMapping > getShadowTarget( KeyMapping km )
@@ -89,7 +89,7 @@ public interface IKeyMappingImpl
 		if ( km instanceof ShadowKeyMapping skm ) {
 			return Optional.of( skm.target );
 		}
-		else if ( km instanceof ShadowToggleableKeyMapping skm ) {
+		else if ( km instanceof ShadowToggleKeyMapping skm ) {
 			return Optional.of( skm.target );
 		}
 		else {
