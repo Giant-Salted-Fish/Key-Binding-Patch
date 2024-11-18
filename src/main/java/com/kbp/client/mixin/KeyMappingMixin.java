@@ -161,19 +161,13 @@ public abstract class KeyMappingMixin implements IKeyMappingImpl, IPatchedKeyMap
 		final var itr = MAP.lookupAll( key ).iterator();
 		while ( itr.hasNext() )
 		{
-			final var km = itr.next();
-			final var ctx = km.getKeyConflictContext();
-			if ( !ctx.isActive() ) {
-				continue;
-			}
-			
-			final var kmm = ( KeyMappingMixin ) ( Object ) km;
+			final var kmm = ( KeyMappingMixin ) ( Object ) itr.next();
 			final var cmb_keys = kmm.getCmbKeys();
 			if ( !ACTIVE_KEYS.containsAll( cmb_keys ) ) {
 				continue;
 			}
 			
-			km.setDown( true );
+			kmm.setDown( true );
 			
 			final var priority = cmb_keys.size();
 			while ( itr.hasNext() )
@@ -185,8 +179,7 @@ public abstract class KeyMappingMixin implements IKeyMappingImpl, IPatchedKeyMap
 					break;
 				}
 				
-				final var ctx1 = kmm1.getKeyConflictContext();
-				if ( ctx1.isActive() && ACTIVE_KEYS.containsAll( cmb_keys1 ) ) {
+				if ( ACTIVE_KEYS.containsAll( cmb_keys1 ) ) {
 					kmm1.setDown( true );
 				}
 			}
