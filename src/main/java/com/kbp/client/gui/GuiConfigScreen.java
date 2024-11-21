@@ -17,13 +17,13 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import java.io.IOException;
 
 @SideOnly( Side.CLIENT )
-final class ConfigGuiScreen extends GuiScreen
+final class GuiConfigScreen extends GuiScreen
 {
 	private final GuiScreen parent_screen;
 	private String title;
 	private GuiShadowCountList shadow_count_list;
 	
-	ConfigGuiScreen( GuiScreen parent_screen ) {
+	GuiConfigScreen( GuiScreen parent_screen ) {
 		this.parent_screen = parent_screen;
 	}
 	

@@ -27,7 +27,7 @@ public final class ConfigGuiFactory implements IModGuiFactory
 	
 	@Override
 	public GuiScreen createConfigGui( GuiScreen parent ) {
-		return new ConfigGuiScreen( parent );
+		return new GuiConfigScreen( parent );
 	}
 	
 	@Override

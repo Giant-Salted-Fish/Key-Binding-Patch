@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 @SideOnly( Side.CLIENT )
 final class GuiShadowCountList extends GuiListExtended
 {
-	private final ConfigGuiScreen parent_screen;
+	private final GuiConfigScreen parent_screen;
 	private final GuiButton save_all_btn;
 	private final IGuiListEntry[] list_entries;
 	private final int max_label_width;
@@ -47,7 +47,7 @@ final class GuiShadowCountList extends GuiListExtended
 	private final HashMap< KeyBinding, Integer > shadow_change = new HashMap<>();
 	
 	
-	GuiShadowCountList( ConfigGuiScreen parent, GuiButton save_all_btn )
+	GuiShadowCountList( GuiConfigScreen parent, GuiButton save_all_btn )
 	{
 		super( parent.mc, parent.width + 45, parent.height, 23, parent.height - 32, 20 );
 		
