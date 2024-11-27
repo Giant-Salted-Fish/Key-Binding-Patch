@@ -1,8 +1,6 @@
 package com.kbp.client.gui;
 
-import com.kbp.client.KBPMod;
 import com.kbp.client.KBPModConfig;
-import com.kbp.client.api.IPatchedKeyBinding;
 import com.kbp.client.impl.IKeyBindingImpl;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -16,10 +14,11 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,19 +31,15 @@ final class GuiShadowCountList extends GuiListExtended
 	private final IGuiListEntry[] list_entries;
 	private final int max_label_width;
 	
-	private final Map< KeyBinding, Integer > shadow_count = (
+	private final Map< String, Integer > shadow_count = (
 		Arrays.stream( KBPModConfig.shadow_key_bindings )
-		.map( KBPMod::findByName )
-		.filter( Optional::isPresent )
-		.map( Optional::get )
-		.map( IPatchedKeyBinding::getKeyBinding )
 		.collect( Collectors.groupingBy( Function.identity(), Collectors.summingInt( o -> 1 ) ) )
 	);
 	
 	/**
-	 * {previous count} = {shadow_count} - {shadow_change}
+	 * {@link #shadow_count} = {previous count} - {shadow_change}
 	 */
-	private final HashMap< KeyBinding, Integer > shadow_change = new HashMap<>();
+	private final HashMap< String, Integer > shadow_change = new HashMap<>();
 	
 	
 	GuiShadowCountList( GuiConfigScreen parent, GuiButton save_all_btn )
@@ -57,13 +52,14 @@ final class GuiShadowCountList extends GuiListExtended
 		final KeyBinding[] kb_arr = (
 			Arrays.stream( this.mc.gameSettings.keyBindings )
 			.filter( kb -> !IKeyBindingImpl.isShadowKeyBinding( kb ) )
-			.sorted()
 			.toArray( KeyBinding[]::new )
 		);
 		
-		final Map< String, List< KeyBinding > > grouped = (
-			Arrays.stream( kb_arr )
-			.collect( Collectors.groupingBy( KeyBinding::getKeyCategory ) )
+		final Map< String, List< ShadowCountEntry > > grouped = Arrays.stream( kb_arr ).collect(
+			Collectors.groupingBy(
+				KeyBinding::getKeyCategory,
+				Collectors.mapping( ShadowCountEntry::new, Collectors.toList() )
+			)
 		);
 		
 		this.list_entries = (
@@ -72,18 +68,18 @@ final class GuiShadowCountList extends GuiListExtended
 			.distinct()
 			.flatMap( category -> Stream.concat(
 				Stream.of( new CategoryEntry( category ) ),
-				grouped.get( category ).stream().map( ShadowCountEntry::new )
+				grouped.get( category ).stream().sorted( Comparator.comparing( e -> e.label_text ) )
 			) )
 			.toArray( IGuiListEntry[]::new )
 		);
 		
 		this.max_label_width = (
-			Arrays.stream( kb_arr )
-			.map( KeyBinding::getKeyDescription )
-			.map( I18n::format )
-			.map( this.mc.fontRenderer::getStringWidth )
-			.max( Integer::compare )
-			.orElseThrow( IllegalStateException::new )
+			grouped.values().stream()
+			.flatMap( Collection::parallelStream )
+			.map( e -> e.label_text )
+			.mapToInt( this.mc.fontRenderer::getStringWidth )
+			.max()
+			.orElse( 0 )
 		);
 	}
 	
@@ -110,10 +106,11 @@ final class GuiShadowCountList extends GuiListExtended
 	
 	void _applyChanges()
 	{
+		assert !this.shadow_change.isEmpty();
 		KBPModConfig.shadow_key_bindings = (
 			this.shadow_count.entrySet().stream()
 			.flatMap( e -> {
-				final String name = e.getKey().getKeyDescription();
+				final String name = e.getKey();
 				final int cnt = e.getValue();
 				return Stream.generate( () -> name ).limit( cnt );
 			} )
@@ -139,17 +136,8 @@ final class GuiShadowCountList extends GuiListExtended
 		public void updatePosition( int slotIndex, int x, int y, float partialTicks ) {
 		}
 		
-		public void drawEntry(
-			int slotIndex,
-			int x,
-			int y,
-			int listWidth,
-			int slotHeight,
-			int mouseX,
-			int mouseY,
-			boolean isSelected,
-			float partialTicks
-		) {
+		public void drawEntry( int slotIndex, int x, int y, int listWidth, int slotHeight, int mouseX, int mouseY, boolean isSelected, float partialTicks )
+		{
 			final Minecraft mc = GuiShadowCountList.this.mc;
 			final FontRenderer font_renderer = mc.fontRenderer;
 			final int pos_x = GuiShadowCountList.this.parent_screen.width / 2 - this.label_width / 2;
@@ -158,32 +146,19 @@ final class GuiShadowCountList extends GuiListExtended
 		}
 		
 		@Override
-		public boolean mousePressed(
-			int slotIndex,
-			int mouseX,
-			int mouseY,
-			int mouseEvent,
-			int relativeX,
-			int relativeY
-		) {
+		public boolean mousePressed( int slotIndex, int mouseX, int mouseY, int mouseEvent, int relativeX, int relativeY ) {
 			return false;
 		}
 		
 		@Override
-		public void mouseReleased(
-			int slotIndex,
-			int x,
-			int y,
-			int mouseEvent,
-			int relativeX,
-			int relativeY
-		) { }
+		public void mouseReleased( int slotIndex, int x, int y, int mouseEvent, int relativeX, int relativeY ) {
+		}
 	}
 	
 	
 	private final class ShadowCountEntry implements IGuiListEntry
 	{
-		private final KeyBinding key_binding;
+		private final String kb_name;
 		private final String label_text;
 		private final GuiButton reduce_count_btn;
 		private final GuiButton increase_count_btn;
@@ -191,8 +166,9 @@ final class GuiShadowCountList extends GuiListExtended
 		
 		private ShadowCountEntry( KeyBinding kb )
 		{
-			this.key_binding = kb;
-			this.label_text = I18n.format( kb.getKeyDescription() );
+			final String name = kb.getKeyDescription();
+			this.kb_name = name;
+			this.label_text = I18n.format( name );
 			this.reduce_count_btn = new GuiButton( 0, 0, 0, 20, 20, "-" );
 			this.increase_count_btn = new GuiButton( 0, 0, 0, 20, 20, "+" );
 			
@@ -243,15 +219,15 @@ final class GuiShadowCountList extends GuiListExtended
 				this.__shiftShadowCount( -1 );
 				return true;
 			}
-			
-			if ( this.increase_count_btn.mousePressed( mc, mouseX, mouseY ) )
+			else if ( this.increase_count_btn.mousePressed( mc, mouseX, mouseY ) )
 			{
 				this.increase_count_btn.playPressSound( mc.getSoundHandler() );
 				this.__shiftShadowCount( 1 );
 				return true;
 			}
-			
-			return false;
+			else {
+				return false;
+			}
 		}
 		
 		@Override
@@ -262,7 +238,7 @@ final class GuiShadowCountList extends GuiListExtended
 		}
 		
 		private int __getShadowCount() {
-			return GuiShadowCountList.this.shadow_count.getOrDefault( this.key_binding, 0 );
+			return GuiShadowCountList.this.shadow_count.getOrDefault( this.kb_name, 0 );
 		}
 		
 		private void __shiftShadowCount( int delta )
@@ -270,9 +246,9 @@ final class GuiShadowCountList extends GuiListExtended
 			final int count = this.__getShadowCount() + delta;
 			this.count_field.displayString = Integer.toString( count );
 			
-			final KeyBinding kb = this.key_binding;
+			final String kb = this.kb_name;
 			GuiShadowCountList.this.shadow_count.compute( kb, ( k, v ) -> count != 0 ? count : null );
-			final HashMap< KeyBinding, Integer > shadow_change = GuiShadowCountList.this.shadow_change;
+			final HashMap< String, Integer > shadow_change = GuiShadowCountList.this.shadow_change;
 			shadow_change.compute( kb, ( k, v ) -> {
 				final int prev_delta = v != null ? v : 0;
 				final int new_delta = prev_delta + delta;

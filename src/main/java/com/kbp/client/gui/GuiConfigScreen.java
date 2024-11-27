@@ -33,7 +33,7 @@ final class GuiConfigScreen extends GuiScreen
 		this.title = I18n.format( "kbp.gui.config_title" );
 		
 		final GuiButton cancel_btn = new GuiButton(
-			1145,
+			0,
 			this.width / 2 - 155, this.height - 29,
 			150, 20,
 			I18n.format( "gui.cancel" )
@@ -41,7 +41,7 @@ final class GuiConfigScreen extends GuiScreen
 		this.addButton( cancel_btn );
 		
 		final GuiButton save_btn = new GuiButton(
-			114514,
+			1,
 			this.width / 2 - 155 + 160, this.height - 29,
 			150, 20,
 			I18n.format( "gui.done" )
@@ -60,24 +60,20 @@ final class GuiConfigScreen extends GuiScreen
 	}
 	
 	@Override
-	protected void actionPerformed( GuiButton button ) throws IOException
+	protected void actionPerformed( GuiButton button )
 	{
-		final boolean is_cancel_clicked = button.id == 1145;
-		if ( is_cancel_clicked )
+		switch ( button.id )
 		{
+		case 0:
 			this.mc.displayGuiScreen( this.parent_screen );
-			return;
-		}
-		
-		final boolean is_save_all_action = button.id == 114514;
-		if ( is_save_all_action )
-		{
+			break;
+		case 1:
 			this.shadow_count_list._applyChanges();
 			
 			final boolean is_world_running = this.mc.world != null;
 			final OnConfigChangedEvent event = new OnConfigChangedEvent( KBPMod.MODID, null, is_world_running, true );
 			MinecraftForge.EVENT_BUS.post( event );
-			if ( !event.getResult().equals( Result.DENY ) )
+			if ( event.getResult() != Result.DENY )
 			{
 				final PostConfigChangedEvent event1 = new PostConfigChangedEvent( KBPMod.MODID, null, is_world_running, true );
 				MinecraftForge.EVENT_BUS.post( event1 );
@@ -88,10 +84,10 @@ final class GuiConfigScreen extends GuiScreen
 			final String btn_label = "fml.configgui.confirmRestartMessage";
 			final GuiMessageDialog screen = new GuiMessageDialog( this.parent_screen, title, message, btn_label );
 			this.mc.displayGuiScreen( screen );
-			return;
+			break;
+		default:
+			assert false: "Unknown button id: " + button.id;
 		}
-		
-		super.actionPerformed( button );
 	}
 	
 	@Override

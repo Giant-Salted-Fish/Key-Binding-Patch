@@ -3,21 +3,21 @@ package com.kbp.client;
 import com.kbp.client.api.IPatchedKeyBinding;
 import com.kbp.client.api.KeyBindingBuilder;
 import com.kbp.client.impl.PatchedKeyBinding;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 
 @Mod(
 	modid = KBPMod.MODID,
-	version = "1.12.2-1.3.3.1",
+	version = "1.3.3.2",
 	clientSideOnly = true,
 	updateJSON = "https://raw.githubusercontent.com/Giant-Salted-Fish/Key-Binding-Patch/1.16.X/update.json",
 	acceptedMinecraftVersions = "[1.12,1.13)",
@@ -44,14 +44,8 @@ public final class KBPMod
 	/**
 	 * @see #getPatched(KeyBinding)
 	 */
-	public static Optional< IPatchedKeyBinding > findByName( String name )
-	{
-		return (
-			Arrays.stream( Minecraft.getMinecraft().gameSettings.keyBindings )
-			.filter( kb -> kb.getKeyDescription().equals( name ) )
-			.findAny()
-			.map( KBPMod::getPatched )
-		);
+	public static Optional< IPatchedKeyBinding > findByName( String name ) {
+		return Optional.ofNullable( KeyBinding$KEYBIND_ARRAY.get( name ) ).map( KBPMod::getPatched );
 	}
 	
 	/**
@@ -77,6 +71,9 @@ public final class KBPMod
 	
 	
 	// Internal implementations that should not be accessed by other mods.
+	private static final Map< String, KeyBinding >
+		KeyBinding$KEYBIND_ARRAY = ObfuscationReflectionHelper.getPrivateValue( KeyBinding.class, null, "KEYBIND_ARRAY" );
+	
 	@SubscribeEvent
 	static void _onConfigChanged( OnConfigChangedEvent evt )
 	{

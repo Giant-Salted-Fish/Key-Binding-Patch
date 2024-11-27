@@ -45,10 +45,9 @@ public interface IKeyBindingImpl
 			return CMB_SHIFT;
 		case ALT:
 			return CMB_ALT;
-		case NONE:
+		default:
 			return ImmutableSet.of();
 		}
-		throw new IllegalArgumentException();
 	}
 	
 	static KeyModifier toModifier( Set< Integer > cmb_keys )

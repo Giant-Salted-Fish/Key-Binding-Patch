@@ -17,7 +17,6 @@ import org.spongepowered.asm.mixin.Unique;
 
 import java.io.IOException;
 import java.util.LinkedList;
-import java.util.stream.Collectors;
 
 @Mixin( GuiControls.class )
 public abstract class GuiControlsMixin extends GuiScreen
