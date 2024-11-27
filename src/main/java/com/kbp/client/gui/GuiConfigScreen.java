@@ -5,7 +5,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.config.GuiMessageDialog;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
@@ -36,7 +36,7 @@ final class GuiConfigScreen extends GuiScreen
 			1145,
 			this.width / 2 - 155, this.height - 29,
 			150, 20,
-			I18n.format( "kbp.gui.cancel" )
+			I18n.format( "gui.cancel" )
 		);
 		this.addButton( cancel_btn );
 		
@@ -44,7 +44,7 @@ final class GuiConfigScreen extends GuiScreen
 			114514,
 			this.width / 2 - 155 + 160, this.height - 29,
 			150, 20,
-			I18n.format( "kbp.gui.save" )
+			I18n.format( "gui.done" )
 		);
 		save_btn.enabled = false;
 		this.addButton( save_btn );
@@ -84,9 +84,7 @@ final class GuiConfigScreen extends GuiScreen
 			}
 			
 			final String title = "fml.configgui.gameRestartTitle";
-			final TextComponentString message = new TextComponentString(
-				I18n.format( "fml.configgui.gameRestartRequired" )
-			);
+			final TextComponentTranslation message = new TextComponentTranslation( "fml.configgui.gameRestartRequired" );
 			final String btn_label = "fml.configgui.confirmRestartMessage";
 			final GuiMessageDialog screen = new GuiMessageDialog( this.parent_screen, title, message, btn_label );
 			this.mc.displayGuiScreen( screen );
