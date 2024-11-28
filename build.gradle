@@ -135,10 +135,10 @@ dependencies {
 	// The "userdev" classifier will be requested and setup by ForgeGradle.
 	// If the group id is "net.minecraft" and the artifact id is one of ["client", "server", "joined"],
 	// then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
-	minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+	minecraft group: 'net.minecraftforge', name: 'forge', version: "${minecraft_version}-${forge_version}"
 
 	// Apply Mixin AP.
-	annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+	annotationProcessor group: 'org.spongepowered', name: 'mixin', version: '0.8.5', classifier: 'processor'
 
 	// Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings.
 	// The JEI API is declared for compile time use, while the full JEI artifact is used at runtime.
@@ -192,10 +192,6 @@ mixin {
 //	dumpTargetOnFailure = true
 }
 
-javadoc {
-	exclude("**/mixin/**")
-}
-
 // Example for how to get properties into the manifest for reading at runtime.
 tasks.named('jar', Jar).configure {
 	manifest {
@@ -219,16 +215,10 @@ tasks.named('jar', Jar).configure {
 //	dependsOn 'reobfJar'
 //}
 
-// Add tasks to generate source and Javadoc JARs
+// Add tasks to generate source JAR
 tasks.register('sourceJar', Jar) {
 	from sourceSets.main.allSource
 	archiveClassifier.set('sources')
-}
-
-tasks.register('javadocJar', Jar) {
-	dependsOn javadoc
-	from javadoc.destinationDir
-	archiveClassifier.set('javadoc')
 }
 
 // Example configuration to allow publishing using the maven-publish plugin.
@@ -237,7 +227,6 @@ publishing {
 		register('mavenJava', MavenPublication) {
 			artifact jar
 			artifact sourceJar
-			artifact javadocJar
 		}
 	}
 	repositories {

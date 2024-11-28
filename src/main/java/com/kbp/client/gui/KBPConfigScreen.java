@@ -4,6 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.AlertScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -29,7 +30,7 @@ public final class KBPConfigScreen extends Screen
 	{
 		final var cancel_btn = (
 			Button.builder(
-				Component.translatable( "kbp.gui.cancel" ),
+				CommonComponents.GUI_CANCEL,
 				btn -> Objects.requireNonNull( this.minecraft ).setScreen( this.parent_screen )
 			)
 			.bounds( this.width / 2 - 155, this.height - 29, 150, 20 )
@@ -39,7 +40,7 @@ public final class KBPConfigScreen extends Screen
 		
 		final var save_btn = (
 			Button.builder(
-				Component.translatable( "kbp.gui.save" ),
+				CommonComponents.GUI_DONE,
 				btn -> {
 					this.shadow_count_list._applyChanges();
 					
@@ -48,7 +49,7 @@ public final class KBPConfigScreen extends Screen
 						() -> mc.setScreen( this.parent_screen ),
 						Component.translatable( "kbp.gui.alert_title" ),
 						Component.translatable( "kbp.gui.alert_message" ),
-						Component.translatable( "kbp.gui.alert_confirm" ),
+						CommonComponents.GUI_ACKNOWLEDGE,
 						false
 					);
 					mc.setScreen( alert_screen );
