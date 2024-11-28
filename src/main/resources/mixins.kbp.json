@@ -6,9 +6,9 @@
 	"mixins": [],
 	"client": [
 		"ClientModLoaderMixin",
+		"KeyBindingMapMixin",
 		"KeyBindsListMixin",
 		"KeyBindsScreenMixin",
-		"KeyBindingMapMixin",
 		"KeyMappingMixin",
 		"OptionsMixin",
 		"ToggleKeyMappingAccess"

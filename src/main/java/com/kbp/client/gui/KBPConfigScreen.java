@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.AlertScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -30,7 +31,7 @@ public final class KBPConfigScreen extends Screen
 		final var cancel_btn = new Button(
 			this.width / 2 - 155, this.height - 29,
 			150, 20,
-			new TranslatableComponent( "kbp.gui.cancel" ),
+			CommonComponents.GUI_CANCEL,
 			btn -> Objects.requireNonNull( this.minecraft ).setScreen( this.parent_screen )
 		);
 		this.addRenderableWidget( cancel_btn );
@@ -38,7 +39,7 @@ public final class KBPConfigScreen extends Screen
 		final var save_btn = new Button(
 			this.width / 2 - 155 + 160, this.height - 29,
 			150, 20,
-			new TranslatableComponent( "kbp.gui.save" ),
+			CommonComponents.GUI_DONE,
 			btn -> {
 				this.shadow_count_list._applyChanges();
 				
