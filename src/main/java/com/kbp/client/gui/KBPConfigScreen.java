@@ -2,6 +2,7 @@ package com.kbp.client.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.DialogTexts;
 import net.minecraft.client.gui.screen.AlertScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
@@ -31,7 +32,7 @@ public final class KBPConfigScreen extends Screen
 		final Button cancel_btn = new Button(
 			this.width / 2 - 155, this.height - 29,
 			150, 20,
-			new TranslationTextComponent( "kbp.gui.cancel" ),
+			DialogTexts.GUI_CANCEL,
 			btn -> Objects.requireNonNull( this.minecraft ).setScreen( this.parent_screen )
 		);
 		this.addButton( cancel_btn );
@@ -39,7 +40,7 @@ public final class KBPConfigScreen extends Screen
 		final Button save_btn = new Button(
 			this.width / 2 - 155 + 160, this.height - 29,
 			150, 20,
-			new TranslationTextComponent( "kbp.gui.save" ),
+			DialogTexts.GUI_DONE,
 			btn -> {
 				this.shadow_count_list._applyChanges();
 				
