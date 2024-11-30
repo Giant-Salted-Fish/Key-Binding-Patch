@@ -157,9 +157,8 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 	{
 		if ( !is_down )
 		{
-			if ( ACTIVE_INPUTS.remove( key ) ) {
-				MAP.lookupAll( key ).forEach( kb -> kb.setDown( false ) );
-			}
+			ACTIVE_INPUTS.remove( key );  // In principle should never repeat.
+			MAP.lookupAll( key ).forEach( kb -> kb.setDown( false ) );
 			return;
 		}
 		
@@ -172,6 +171,11 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 		while ( itr.hasNext() )
 		{
 			final KeyBindingMixin kbm = ( KeyBindingMixin ) ( Object ) itr.next();
+			final IKeyConflictContext ctx = kbm.getKeyConflictContext();
+			if ( !ctx.isActive() ) {
+				continue;
+			}
+			
 			final ImmutableSet< Input > cmb_keys = kbm.getCmbKeys();
 			if ( !ACTIVE_INPUTS.containsAll( cmb_keys ) ) {
 				continue;
@@ -189,7 +193,8 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 					break;
 				}
 				
-				if ( ACTIVE_INPUTS.containsAll( cmb_keys1 ) ) {
+				final IKeyConflictContext ctx1 = kbm1.getKeyConflictContext();
+				if ( ctx1.isActive() && ACTIVE_INPUTS.containsAll( cmb_keys1 ) ) {
 					kbm1.setDown( true );
 				}
 			}
