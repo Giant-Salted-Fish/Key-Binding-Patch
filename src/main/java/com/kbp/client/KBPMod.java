@@ -5,18 +5,19 @@ import com.kbp.client.api.KeyBindingBuilder;
 import com.kbp.client.gui.KBPConfigScreen;
 import com.kbp.client.impl.PatchedKeyBinding;
 import com.kbp.client.impl.PatchedToggleableKeyBinding;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.client.util.InputMappings.Input;
 import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.config.ModConfig.Type;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
@@ -38,14 +39,8 @@ public final class KBPMod
 	/**
 	 * @see #getPatched(KeyBinding)
 	 */
-	public static Optional< IPatchedKeyBinding > findByName( String name )
-	{
-		return (
-			Arrays.stream( Minecraft.getInstance().options.keyMappings )
-			.filter( kb -> kb.getName().equals( name ) )
-			.findAny()
-			.map( KBPMod::getPatched )
-		);
+	public static Optional< IPatchedKeyBinding > findByName( String name ) {
+		return Optional.ofNullable( KeyBinding$ALL.get( name ) ).map( KBPMod::getPatched );
 	}
 	
 	/**
@@ -106,6 +101,10 @@ public final class KBPMod
 	
 	
 	// Internal implementations that should not be accessed by other mods.
+	private static final Map< String, KeyBinding > KeyBinding$ALL = Objects.requireNonNull(
+		ObfuscationReflectionHelper.getPrivateValue( KeyBinding.class, null, "field_74516_a" )
+	);
+	
 	public KBPMod()
 	{
 		// Make sure the mod being absent on the other network side does not

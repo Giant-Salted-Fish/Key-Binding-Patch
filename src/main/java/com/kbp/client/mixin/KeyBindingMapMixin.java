@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.kbp.client.api.IPatchedKeyBinding;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.client.util.InputMappings;
 import net.minecraft.client.util.InputMappings.Input;
 import net.minecraftforge.client.settings.KeyBindingMap;
 import net.minecraftforge.client.settings.KeyModifier;
@@ -33,6 +34,10 @@ public abstract class KeyBindingMapMixin
 	@Overwrite( remap = false )
 	public void addKey( Input key, KeyBinding kb )
 	{
+		if ( key == InputMappings.UNKNOWN ) {
+			return;
+		}
+		
 		final KeyModifier modifier = kb.getKeyModifier();
 		final Map< Input, Collection< KeyBinding > > mapper = map.get( modifier );
 		mapper.compute( key, ( k, v ) -> {
