@@ -8,15 +8,16 @@ import com.kbp.client.impl.PatchedToggleKeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.ConfigScreenHandler.ConfigScreenFactory;
 import net.minecraftforge.fml.IExtensionPoint.DisplayTest;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig.Type;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
@@ -38,14 +39,8 @@ public final class KBPMod
 	/**
 	 * @see #getPatched(KeyMapping)
 	 */
-	public static Optional< IPatchedKeyMapping > findByName( String name )
-	{
-		return (
-			Arrays.stream( Minecraft.getInstance().options.keyMappings )
-			.filter( kb -> kb.getName().equals( name ) )
-			.findFirst()
-			.map( KBPMod::getPatched )
-		);
+	public static Optional< IPatchedKeyMapping > findByName( String name ) {
+		return Optional.ofNullable( KeyMapping$ALL.get( name ) ).map( KBPMod::getPatched );
 	}
 	
 	/**
@@ -106,6 +101,10 @@ public final class KBPMod
 	
 	
 	// Internal implementations that should not be accessed by other mods.
+	private static final Map< String, KeyMapping > KeyMapping$ALL = Objects.requireNonNull(
+		ObfuscationReflectionHelper.getPrivateValue( KeyMapping.class, null, "f_90809_" )
+	);
+	
 	public KBPMod()
 	{
 		// Make sure the mod being absent on the other network side does not
