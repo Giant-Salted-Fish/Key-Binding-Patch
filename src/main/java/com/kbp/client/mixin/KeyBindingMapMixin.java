@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.kbp.client.api.IPatchedKeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.InputConstants.Key;
 import net.minecraft.client.KeyMapping;
 import net.minecraftforge.client.settings.KeyBindingMap;
@@ -33,6 +34,10 @@ public abstract class KeyBindingMapMixin
 	@Overwrite( remap = false )
 	public void addKey( Key key, KeyMapping km )
 	{
+		if ( key == InputConstants.UNKNOWN ) {
+			return;
+		}
+		
 		final var modifier = km.getKeyModifier();
 		final var mapper = map.get( modifier );
 		mapper.compute( key, ( k, v ) -> {
