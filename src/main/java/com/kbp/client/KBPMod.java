@@ -17,7 +17,7 @@ import java.util.Optional;
 
 @Mod(
 	modid = KBPMod.MODID,
-	version = "1.3.3.2",
+	version = "1.3.3.3",
 	clientSideOnly = true,
 	updateJSON = "https://raw.githubusercontent.com/Giant-Salted-Fish/Key-Binding-Patch/1.16.X/update.json",
 	acceptedMinecraftVersions = "[1.12,1.13)",

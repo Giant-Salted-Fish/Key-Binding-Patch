@@ -134,6 +134,11 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 		while ( itr.hasNext() )
 		{
 			final KeyBindingMixin kbm = ( KeyBindingMixin ) ( Object ) itr.next();
+			final IKeyConflictContext ctx = kbm.getKeyConflictContext();
+			if ( !ctx.isActive() ) {
+				continue;
+			}
+			
 			final ImmutableSet< Integer > cmb_keys = kbm.getCmbKeys();
 			if ( !cmb_keys.stream().allMatch( IKeyBindingImpl::isKeyDown ) ) {
 				continue;
@@ -151,7 +156,8 @@ public abstract class KeyBindingMixin implements IKeyBindingImpl, IPatchedKeyBin
 					break;
 				}
 				
-				if ( cmb_keys1.stream().allMatch( IKeyBindingImpl::isKeyDown ) ) {
+				final IKeyConflictContext ctx1 = kbm1.getKeyConflictContext();
+				if ( ctx1.isActive() && cmb_keys1.stream().allMatch( IKeyBindingImpl::isKeyDown ) ) {
 					kbm1.pressKey();
 				}
 			}

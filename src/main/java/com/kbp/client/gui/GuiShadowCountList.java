@@ -169,13 +169,19 @@ final class GuiShadowCountList extends GuiListExtended
 			final String name = kb.getKeyDescription();
 			this.kb_name = name;
 			this.label_text = I18n.format( name );
-			this.reduce_count_btn = new GuiButton( 0, 0, 0, 20, 20, "-" );
-			this.increase_count_btn = new GuiButton( 0, 0, 0, 20, 20, "+" );
 			
 			final int count = this.__getShadowCount();
 			final GuiButton count_field = new GuiButton( 0, 0, 0, 20, 20, Integer.toString( count ) );
 			count_field.enabled = false;
 			this.count_field = count_field;
+			
+			final GuiButton rdc_btn = new GuiButton( 0, 0, 0, 20, 20, "-" );
+			rdc_btn.enabled = count > 0;
+			this.reduce_count_btn = rdc_btn;
+			
+			final GuiButton icr_btn = new GuiButton( 0, 0, 0, 20, 20, "+" );
+			icr_btn.enabled = count < 5;
+			this.increase_count_btn = icr_btn;
 		}
 		
 		@Override
@@ -190,11 +196,9 @@ final class GuiShadowCountList extends GuiListExtended
 			final int pos_y = y + slotHeight / 2 - mc.fontRenderer.FONT_HEIGHT / 2;
 			mc.fontRenderer.drawString( this.label_text, pos_x, pos_y, MathHelper.rgb( 255, 255, 255 ) );
 			
-			final int count = this.__getShadowCount();
 			final GuiButton rcb = this.reduce_count_btn;
 			rcb.x = x + 105;
 			rcb.y = y;
-			rcb.enabled = count > 0;
 			rcb.drawButton( mc, mouseX, mouseY, partialTicks );
 			
 			final GuiButton cf = this.count_field;
@@ -205,7 +209,6 @@ final class GuiShadowCountList extends GuiListExtended
 			final GuiButton icb = this.increase_count_btn;
 			icb.x = x + 149;
 			icb.y = y;
-			icb.enabled = count < 5;
 			icb.drawButton( mc, mouseX, mouseY, partialTicks );
 		}
 		
@@ -216,13 +219,17 @@ final class GuiShadowCountList extends GuiListExtended
 			if ( this.reduce_count_btn.mousePressed( mc, mouseX, mouseY ) )
 			{
 				this.reduce_count_btn.playPressSound( mc.getSoundHandler() );
-				this.__shiftShadowCount( -1 );
+				final int cnt = this.__shiftShadowCount( -1 );
+				this.reduce_count_btn.enabled = cnt > 0;
+				this.increase_count_btn.enabled = true;
 				return true;
 			}
 			else if ( this.increase_count_btn.mousePressed( mc, mouseX, mouseY ) )
 			{
 				this.increase_count_btn.playPressSound( mc.getSoundHandler() );
-				this.__shiftShadowCount( 1 );
+				final int cnt = this.__shiftShadowCount( 1 );
+				this.increase_count_btn.enabled = cnt < 5;
+				this.reduce_count_btn.enabled = true;
 				return true;
 			}
 			else {
@@ -241,7 +248,7 @@ final class GuiShadowCountList extends GuiListExtended
 			return GuiShadowCountList.this.shadow_count.getOrDefault( this.kb_name, 0 );
 		}
 		
-		private void __shiftShadowCount( int delta )
+		private int __shiftShadowCount( int delta )
 		{
 			final int count = this.__getShadowCount() + delta;
 			this.count_field.displayString = Integer.toString( count );
@@ -255,6 +262,7 @@ final class GuiShadowCountList extends GuiListExtended
 				return new_delta != 0 ? new_delta : null;
 			} );
 			GuiShadowCountList.this.save_all_btn.enabled = !shadow_change.isEmpty();
+			return count;
 		}
 	}
 }
