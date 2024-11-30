@@ -72,7 +72,7 @@ public final class KBPMod
 	
 	// Internal implementations that should not be accessed by other mods.
 	private static final Map< String, KeyBinding >
-		KeyBinding$KEYBIND_ARRAY = ObfuscationReflectionHelper.getPrivateValue( KeyBinding.class, null, "KEYBIND_ARRAY" );
+		KeyBinding$KEYBIND_ARRAY = ObfuscationReflectionHelper.getPrivateValue( KeyBinding.class, null, "field_74516_a" );
 	
 	@SubscribeEvent
 	static void _onConfigChanged( OnConfigChangedEvent evt )

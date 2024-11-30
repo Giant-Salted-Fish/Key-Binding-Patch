@@ -8,6 +8,7 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.IntHashMap;
 import net.minecraftforge.client.settings.KeyBindingMap;
 import net.minecraftforge.client.settings.KeyModifier;
+import org.lwjgl.input.Keyboard;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -32,6 +33,12 @@ public abstract class KeyBindingMapMixin
 	@Overwrite( remap = false )
 	public void addKey( int key_code, KeyBinding kb )
 	{
+		// Keyboard#KEY_NONE sometimes can be triggered by switching input method.
+		// So we need to exclude it.
+		if ( key_code == Keyboard.KEY_NONE ) {
+			return;
+		}
+		
 		final KeyModifier modifier = kb.getKeyModifier();
 		final IntHashMap< Collection< KeyBinding > > mapper = map.get( modifier );
 		final Collection< KeyBinding > lookup = mapper.lookup( key_code );
