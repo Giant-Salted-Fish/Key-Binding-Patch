@@ -147,9 +147,8 @@ public abstract class KeyMappingMixin implements IKeyMappingImpl, IPatchedKeyMap
 	{
 		if ( !is_down )
 		{
-			if ( ACTIVE_KEYS.remove( key ) ) {
-				MAP.lookupAll( key ).forEach( km -> km.setDown( false ) );
-			}
+			ACTIVE_KEYS.remove( key );  // In principle, this should never repeat.
+			MAP.lookupAll( key ).forEach( km -> km.setDown( false ) );
 			return;
 		}
 		
