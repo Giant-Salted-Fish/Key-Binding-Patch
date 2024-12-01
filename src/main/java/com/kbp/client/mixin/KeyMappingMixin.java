@@ -147,9 +147,8 @@ public abstract class KeyMappingMixin implements IKeyMappingImpl, IPatchedKeyMap
 	{
 		if ( !is_down )
 		{
-			if ( ACTIVE_KEYS.remove( key ) ) {
-				MAP.getAll( key ).forEach( km -> km.setDown( false ) );
-			}
+			ACTIVE_KEYS.remove( key );  // In principle should never repeat.
+			MAP.getAll( key ).forEach( km -> km.setDown( false ) );
 			return;
 		}
 		
@@ -162,6 +161,11 @@ public abstract class KeyMappingMixin implements IKeyMappingImpl, IPatchedKeyMap
 		while ( itr.hasNext() )
 		{
 			final var kmm = ( KeyMappingMixin ) ( Object ) itr.next();
+			final var ctx = kmm.getKeyConflictContext();
+			if ( !ctx.isActive() ) {
+				continue;
+			}
+			
 			final var cmb_keys = kmm.getCmbKeys();
 			if ( !ACTIVE_KEYS.containsAll( cmb_keys ) ) {
 				continue;
@@ -179,7 +183,8 @@ public abstract class KeyMappingMixin implements IKeyMappingImpl, IPatchedKeyMap
 					break;
 				}
 				
-				if ( ACTIVE_KEYS.containsAll( cmb_keys1 ) ) {
+				final var ctx1 = kmm1.getKeyConflictContext();
+				if ( ctx1.isActive() && ACTIVE_KEYS.containsAll( cmb_keys1 ) ) {
 					kmm1.setDown( true );
 				}
 			}
