@@ -32,7 +32,7 @@ body:
   - type: dropdown
     attributes:
       label: KBP Version
-      description: Only problems in latest or recommended version will be accepted
+      description: Only problems for latest or recommended version will be accepted
       options:
         - 1.3.3.3-beta
         - 1.3.3.2
@@ -41,6 +41,8 @@ body:
     validations:
       required: true
   - type: checkboxes
+    validations:
+      required: true
     attributes:
       label: OS
       description: You may select more than one
@@ -49,19 +51,14 @@ body:
         - label: Linux
         - label: MacOS
         - label: Other
-    validations:
-      required: true
   - type: textarea
     attributes:
       label: Mod List (Optional)
-      placeholder: |
-        InvMove-0.4.6
-        etc...
+      placeholder: InvMove-0.4.6; etc...
   - type: textarea
     attributes:
       label: Describe the bug
-      placeholder: A clear and concise description of what the bug is.
-      value: |
+      placeholder: |
         A clear and concise description of what the bug is. If applicable, add screenshots and game log to help explain your problem.
         
         If you have any leads, include them here. (eg. if the issue occurs only on multiplayer or only in a certain inventory type)
@@ -69,7 +66,7 @@ body:
       required: true
   - type: textarea
     attributes:
-      label: To Reproduce
+      label: How to Reproduce
       placeholder: Describe how this issue can be reproduced.
     validations:
       required: true
