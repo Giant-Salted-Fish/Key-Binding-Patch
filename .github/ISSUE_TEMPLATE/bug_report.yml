@@ -1,6 +1,5 @@
 name: Bug Report
 description: File a bug report.
-title: "[Bug]: "
 labels: ["bug", "unverified"]
 body:
   - type: checkboxes
@@ -26,6 +25,8 @@ body:
   - type: input
     attributes:
       label: Forge Version
+      description: You should be able to find this in your MC launcher
+      placeholder: Input version of the Forge that you are using
       value: 47.2.20
     validations:
       required: true
@@ -54,14 +55,11 @@ body:
   - type: textarea
     attributes:
       label: Mod List (Optional)
-      placeholder: InvMove-0.4.6; etc...
+      placeholder: InvMove-0.4.6, etc...
   - type: textarea
     attributes:
       label: Describe the bug
-      placeholder: |
-        A clear and concise description of what the bug is. If applicable, add screenshots and game log to help explain your problem.
-        
-        If you have any leads, include them here. (eg. if the issue occurs only on multiplayer or only in a certain inventory type)
+      placeholder: A clear and concise description of what the bug is. If applicable, add screenshots and game log to help explain your problem. If you have any leads, include them here. (eg. if the issue occurs only on multiplayer or only in a certain inventory type)
     validations:
       required: true
   - type: textarea
