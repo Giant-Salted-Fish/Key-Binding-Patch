@@ -296,7 +296,7 @@ public abstract class KeyMappingMixin implements IKeyMappingImpl, IPatchedKeyMap
 	 * @reason Proxy to delegate for shadow key mapping.
 	 */
 	@Overwrite
-	private void release()
+	public void release()  // Fix compatibility issue with SpyGlass mod.
 	{
 		final var delegate = ( KeyMappingMixin ) this.getDelegate();
 		delegate.clickCount = Math.max( 0, delegate.clickCount - 1 );
