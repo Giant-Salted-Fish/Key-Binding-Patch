@@ -12,7 +12,7 @@ import java.util.List;
 @OnlyIn( Dist.CLIENT )
 public final class KBPModConfig
 {
-	public static final ForgeConfigSpec CONFIG_SPEC;
+	static final ForgeConfigSpec CONFIG_SPEC;
 	public static final ConfigValue< List< ? extends String > > SHADOW_KEY_MAPPINGS;
 	
 	static

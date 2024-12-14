@@ -1,10 +1,12 @@
 package com.kbp.client.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.AlertScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -15,6 +17,8 @@ import java.util.Objects;
 @OnlyIn( Dist.CLIENT )
 public final class KBPConfigScreen extends Screen
 {
+	private static final int WHITE = Objects.requireNonNull( TextColor.fromLegacyFormat( ChatFormatting.WHITE ) ).getValue();
+	
 	private final Screen parent_screen;
 	private ShadowCountList shadow_count_list;
 	
@@ -66,18 +70,8 @@ public final class KBPConfigScreen extends Screen
 	{
 		this.renderBackground( pose );
 		this.shadow_count_list.render( pose, p_96563_, p_96564_, partial_ticks );
-		drawCenteredString( pose, this.font, this.title, this.width / 2, 8, RGB( 255, 255, 255 ) );
+		drawCenteredString( pose, this.font, this.title, this.width / 2, 8, WHITE );
 		
 		super.render( pose, p_96563_, p_96564_, partial_ticks );
-	}
-	
-	
-	// >>> Utility Function <<<
-	static int RGB( int red, int green, int blue )
-	{
-		assert red >= 0 && red <= 255;
-		assert green >= 0 && green <= 255;
-		assert blue >= 0 && blue <= 255;
-		return ( red << 16 ) | ( green << 8 ) | blue;
 	}
 }
