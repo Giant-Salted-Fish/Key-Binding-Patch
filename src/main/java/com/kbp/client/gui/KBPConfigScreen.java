@@ -1,11 +1,13 @@
 package com.kbp.client.gui;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.AlertScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
@@ -15,6 +17,8 @@ import java.util.Objects;
 @OnlyIn( Dist.CLIENT )
 public final class KBPConfigScreen extends Screen
 {
+	private static final int WHITE = Objects.requireNonNull( TextColor.fromLegacyFormat( ChatFormatting.WHITE ) ).getValue();
+	
 	private final Screen parent_screen;
 	private ShadowCountList shadow_count_list;
 	
@@ -71,18 +75,8 @@ public final class KBPConfigScreen extends Screen
 	{
 		this.renderBackground( graphics );
 		this.shadow_count_list.render( graphics, p_281550_, p_282878_, partial_ticks );
-		graphics.drawCenteredString( this.font, this.title, this.width / 2, 8, RGB( 255, 255, 255 ) );
+		graphics.drawCenteredString( this.font, this.title, this.width / 2, 8, WHITE );
 		
 		super.render( graphics, p_281550_, p_282878_, partial_ticks );
-	}
-	
-	
-	// >>> Utility Function <<<
-	static int RGB( int red, int green, int blue )
-	{
-		assert red >= 0 && red <= 255;
-		assert green >= 0 && green <= 255;
-		assert blue >= 0 && blue <= 255;
-		return ( red << 16 ) | ( green << 8 ) | blue;
 	}
 }

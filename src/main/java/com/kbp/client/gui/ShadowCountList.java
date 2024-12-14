@@ -3,6 +3,7 @@ package com.kbp.client.gui;
 import com.kbp.client.KBPModConfig;
 import com.kbp.client.gui.ShadowCountList.Entry;
 import com.kbp.client.impl.IKeyMappingImpl;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
@@ -12,6 +13,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
@@ -28,11 +30,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.kbp.client.gui.KBPConfigScreen.RGB;
-
 @OnlyIn( Dist.CLIENT )
 final class ShadowCountList extends ContainerObjectSelectionList< Entry >
 {
+	private static final int WHITE = Objects.requireNonNull( TextColor.fromLegacyFormat( ChatFormatting.WHITE ) ).getValue();
+	
 	private final Button save_all_btn;
 	private final int max_label_width;
 	
@@ -43,7 +45,7 @@ final class ShadowCountList extends ContainerObjectSelectionList< Entry >
 	
 	/**
 	 * {@link #shadow_count} = {previous count} - {shadow_change}
- 	 */
+	 */
 	private final HashMap< String, Integer > shadow_change = new HashMap<>();
 	
 	
@@ -143,9 +145,10 @@ final class ShadowCountList extends ContainerObjectSelectionList< Entry >
 		) {
 			final var mc = ShadowCountList.this.minecraft;
 			final var screen = Objects.requireNonNull( mc.screen );
+			final var font = mc.font;
 			final var pos_x = ( screen.width - this.width ) / 2;
-			final var pos_y = y + slot_height - 9 - 1;
-			graphics.drawString( mc.font, this.label, pos_x, pos_y, RGB( 255, 255, 255 ), false );
+			final var pos_y = y + slot_height - font.lineHeight - 1;
+			graphics.drawString( font, this.label, pos_x, pos_y, WHITE, false );
 		}
 		
 		@Nullable
@@ -181,25 +184,45 @@ final class ShadowCountList extends ContainerObjectSelectionList< Entry >
 			final var name = km.getName();
 			this.km_name = name;
 			this.label = Component.translatable( name );
-			this.reduce_count_btn = (
-				Button.builder( Component.literal( "-" ), btn -> this.__shiftShadowCount( -1 ) )
-				.bounds( 0, 0, 20, 20 )
-				.build()
-			);
-			this.increase_count_btn = (
-				Button.builder( Component.literal( "+" ), btn -> this.__shiftShadowCount( 1 ) )
-				.bounds( 0, 0, 20, 20 )
-				.build()
-			);
 			
-			final var count = Integer.toString( this.__getShadowCount() );
+			final var count = this.__getShadowCount();
 			final var count_field = (
-				Button.builder( Component.literal( count ), btn -> { } )
+				Button.builder( Component.literal( Integer.toString( count ) ), btn -> { } )
 				.bounds( 0, 0, 20, 20 )
 				.build()
 			);
 			count_field.active = false;
 			this.count_field = count_field;
+			
+			final var rdc_btn = (
+				Button.builder( Component.literal( "-" ), this::__handleReduceBtnClick )
+				.bounds( 0, 0, 20, 20 )
+				.build()
+			);
+			rdc_btn.active = count > 0;
+			this.reduce_count_btn = rdc_btn;
+			
+			final var icr_btn = (
+				Button.builder( Component.literal( "+" ), this::__handleIncreaseBtnClick )
+				.bounds( 0, 0, 20, 20 )
+				.build()
+			);
+			icr_btn.active = count < 5;
+			this.increase_count_btn = icr_btn;
+		}
+		
+		private void __handleReduceBtnClick( Button btn )
+		{
+			final var cnt = this.__shiftShadowCount( -1 );
+			btn.active = cnt > 0;
+			this.increase_count_btn.active = true;
+		}
+		
+		private void __handleIncreaseBtnClick( Button btn )
+		{
+			final var cnt = this.__shiftShadowCount( 1 );
+			btn.active = cnt < 5;
+			this.reduce_count_btn.active = true;
 		}
 		
 		@Override
@@ -217,14 +240,12 @@ final class ShadowCountList extends ContainerObjectSelectionList< Entry >
 		) {
 			final var font = ShadowCountList.this.minecraft.font;
 			final var pos_x = p_281373_ + 90 - ShadowCountList.this.max_label_width;
-			final var pos_y = y + slot_height / 2 - 4;
-			graphics.drawString( font, this.label, pos_x, pos_y, RGB( 255, 255, 255 ), false );
+			final var pos_y = y + ( slot_height - font.lineHeight ) / 2;
+			graphics.drawString( font, this.label, pos_x, pos_y, WHITE, false );
 			
-			final var count = this.__getShadowCount();
 			final var rcb = this.reduce_count_btn;
 			rcb.setX( p_281373_ + 105 );
 			rcb.setY( y );
-			rcb.active = count > 0;
 			rcb.render( graphics, mouse_x, mouse_y, partial_ticks );
 			
 			final var cf = this.count_field;
@@ -235,7 +256,6 @@ final class ShadowCountList extends ContainerObjectSelectionList< Entry >
 			final var icb = this.increase_count_btn;
 			icb.setX( p_281373_ + 149 );
 			icb.setY( y );
-			icb.active = count < 5;
 			icb.render( graphics, mouse_x, mouse_y, partial_ticks );
 		}
 		
@@ -255,7 +275,7 @@ final class ShadowCountList extends ContainerObjectSelectionList< Entry >
 			return ShadowCountList.this.shadow_count.getOrDefault( this.km_name, 0 );
 		}
 		
-		private void __shiftShadowCount( int delta )
+		private int __shiftShadowCount( int delta )
 		{
 			final var count = this.__getShadowCount() + delta;
 			final var text = Component.literal( Integer.toString( count ) );
@@ -270,6 +290,7 @@ final class ShadowCountList extends ContainerObjectSelectionList< Entry >
 				return new_delta != 0 ? new_delta : null;
 			} );
 			ShadowCountList.this.save_all_btn.active = !shadow_change.isEmpty();
+			return count;
 		}
 	}
 }
