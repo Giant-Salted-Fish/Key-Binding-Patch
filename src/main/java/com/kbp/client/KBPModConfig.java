@@ -12,7 +12,7 @@ import java.util.List;
 @OnlyIn( Dist.CLIENT )  // TODO: Test crash on server side?
 public final class KBPModConfig
 {
-	public static final ForgeConfigSpec CONFIG_SPEC;
+	static final ForgeConfigSpec CONFIG_SPEC;
 	public static final ConfigValue< List< ? extends String > > SHADOW_KEY_BINDINGS;
 	
 	static

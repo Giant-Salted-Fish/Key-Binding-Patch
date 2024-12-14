@@ -6,6 +6,8 @@ import net.minecraft.client.gui.DialogTexts;
 import net.minecraft.client.gui.screen.AlertScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.util.text.Color;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -16,6 +18,8 @@ import java.util.Objects;
 @OnlyIn( Dist.CLIENT )
 public final class KBPConfigScreen extends Screen
 {
+	private static final int WHITE = Objects.requireNonNull( Color.fromLegacyFormat( TextFormatting.WHITE ) ).getValue();
+	
 	private final Screen parent_screen;
 	private ShadowCountList shadow_count_list;
 	
@@ -67,18 +71,8 @@ public final class KBPConfigScreen extends Screen
 	{
 		this.renderBackground( matrix );
 		this.shadow_count_list.render( matrix, p_230430_2_, p_230430_3_, partial_ticks );
-		drawCenteredString( matrix, this.font, this.title, this.width / 2, 8, RGB( 255, 255, 255 ) );
+		drawCenteredString( matrix, this.font, this.title, this.width / 2, 8, WHITE );
 		
 		super.render( matrix, p_230430_2_, p_230430_3_, partial_ticks );
-	}
-	
-	
-	// >>> Utility Function <<<
-	static int RGB( int red, int green, int blue )
-	{
-		assert red >= 0 && red <= 255;
-		assert green >= 0 && green <= 255;
-		assert blue >= 0 && blue <= 255;
-		return ( red << 16 ) | ( green << 8 ) | blue;
 	}
 }

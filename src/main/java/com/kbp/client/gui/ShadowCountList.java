@@ -12,8 +12,10 @@ import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.gui.widget.list.AbstractOptionList;
 import net.minecraft.client.gui.widget.list.KeyBindingList;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.text.Color;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -31,11 +33,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.kbp.client.gui.KBPConfigScreen.RGB;
-
 @OnlyIn( Dist.CLIENT )
 final class ShadowCountList extends AbstractOptionList< KeyBindingList.Entry >
 {
+	private static final int WHITE = Objects.requireNonNull( Color.fromLegacyFormat( TextFormatting.WHITE ) ).getValue();
+	
 	private final Button save_all_btn;
 	private final int max_label_width;
 	
@@ -140,10 +142,11 @@ final class ShadowCountList extends AbstractOptionList< KeyBindingList.Entry >
 			float partial_ticks
 		) {
 			final Minecraft mc = ShadowCountList.this.minecraft;
-			final Screen screen = Objects.requireNonNull( mc.screen );
-			final float pos_x = ( screen.width - this.width ) * 0.5F;
-			final float pos_y = y + slot_height - 9 - 1;
-			mc.font.draw( matrix, this.label, pos_x, pos_y, RGB( 255, 255, 255 ) );
+			final Screen parent = Objects.requireNonNull( mc.screen );
+			final FontRenderer font = mc.font;
+			final float pos_x = ( parent.width - this.width ) * 0.5F;
+			final float pos_y = y + slot_height - font.lineHeight - 1;
+			font.draw( matrix, this.label, pos_x, pos_y, WHITE );
 		}
 		
 		@Override
@@ -171,24 +174,44 @@ final class ShadowCountList extends AbstractOptionList< KeyBindingList.Entry >
 			final String name = kb.getName();
 			this.kb_name = name;
 			this.label_text = new TranslationTextComponent( name );
-			this.reduce_count_btn = new Button(
-				0, 0,
-				20, 20,
-				new StringTextComponent( "-" ),
-				btn -> this.__shiftShadowCount( -1 )
-			);
-			this.increase_count_btn = new Button(
-				0, 0,
-				20, 20,
-				new StringTextComponent( "+" ),
-				btn -> this.__shiftShadowCount( 1 )
-			);
 			
-			final String count = Integer.toString( this.__getShadowCount() );
-			final ITextComponent text = new StringTextComponent( count );
+			final int count = this.__getShadowCount();
+			final ITextComponent text = new StringTextComponent( Integer.toString( count ) );
 			final Button count_field = new Button( 0, 0, 20, 20, text, btn -> { } );
 			count_field.active = false;
 			this.count_field = count_field;
+			
+			final Button rdc_btn = new Button(
+				0, 0,
+				20, 20,
+				new StringTextComponent( "-" ),
+				this::__handleReduceBtnClick
+			);
+			rdc_btn.active = count > 0;
+			this.reduce_count_btn = rdc_btn;
+			
+			final Button icr_btn = new Button(
+				0, 0,
+				20, 20,
+				new StringTextComponent( "+" ),
+				this::__handleIncreaseBtnClick
+			);
+			icr_btn.active = count < 5;
+			this.increase_count_btn = icr_btn;
+		}
+		
+		private void __handleReduceBtnClick( Button btn )
+		{
+			final int cnt = this.__shiftShadowCount( -1 );
+			btn.active = cnt > 0;
+			this.increase_count_btn.active = true;
+		}
+		
+		private void __handleIncreaseBtnClick( Button btn )
+		{
+			final int cnt = this.__shiftShadowCount( 1 );
+			btn.active = cnt < 5;
+			this.reduce_count_btn.active = true;
 		}
 		
 		@Override
@@ -206,14 +229,12 @@ final class ShadowCountList extends AbstractOptionList< KeyBindingList.Entry >
 		) {
 			final FontRenderer font = ShadowCountList.this.minecraft.font;
 			final float pos_x = p_230432_4_ + 90 - ShadowCountList.this.max_label_width;
-			final float pos_y = y + ( slot_height - 9 ) * 0.5F;
-			font.draw( matrix, this.label_text, pos_x, pos_y, RGB( 255, 255, 255 ) );
+			final float pos_y = y + ( slot_height - font.lineHeight ) * 0.5F;
+			font.draw( matrix, this.label_text, pos_x, pos_y, WHITE );
 			
-			final int count = this.__getShadowCount();
 			final Button rcb = this.reduce_count_btn;
 			rcb.x = p_230432_4_ + 105;
 			rcb.y = y;
-			rcb.active = count > 0;
 			rcb.render( matrix, mouse_x, mouse_y, partial_ticks );
 			
 			final Button cf = this.count_field;
@@ -224,7 +245,6 @@ final class ShadowCountList extends AbstractOptionList< KeyBindingList.Entry >
 			final Button icb = this.increase_count_btn;
 			icb.x = p_230432_4_ + 149;
 			icb.y = y;
-			icb.active = count < 5;
 			icb.render( matrix, mouse_x, mouse_y, partial_ticks );
 		}
 		
@@ -256,7 +276,7 @@ final class ShadowCountList extends AbstractOptionList< KeyBindingList.Entry >
 			return ShadowCountList.this.shadow_count.getOrDefault( this.kb_name, 0 );
 		}
 		
-		private void __shiftShadowCount( int delta )
+		private int __shiftShadowCount( int delta )
 		{
 			final int count = this.__getShadowCount() + delta;
 			final ITextComponent text = new StringTextComponent( Integer.toString( count ) );
@@ -271,6 +291,7 @@ final class ShadowCountList extends AbstractOptionList< KeyBindingList.Entry >
 				return new_delta != 0 ? new_delta : null;
 			} );
 			ShadowCountList.this.save_all_btn.active = !shadow_change.isEmpty();
+			return count;
 		}
 	}
 }
