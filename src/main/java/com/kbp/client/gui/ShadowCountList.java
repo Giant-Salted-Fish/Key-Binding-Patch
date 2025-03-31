@@ -112,8 +112,6 @@ final class ShadowCountList extends AbstractOptionList< KeyBindingList.Entry >
 			} )
 			.collect( Collectors.toList() )
 		);
-		
-		KBPModConfig.SHADOW_KEY_BINDINGS.save();
 	}
 	
 	
