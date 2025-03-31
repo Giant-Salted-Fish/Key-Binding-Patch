@@ -109,8 +109,6 @@ final class ShadowCountList extends ContainerObjectSelectionList< Entry >
 			} )
 			.toList()
 		);
-		
-		KBPModConfig.SHADOW_KEY_MAPPINGS.save();
 	}
 	
 	
