@@ -1,0 +1,28 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+
+[[mods]]
+modId="key_binding_patch"
+version="1.0.0"
+displayName="Key Binding Patch"
+logoFile="logo.png"
+credits="Giant_Salted_Fish"
+authors="Giant_Salted_Fish"
+description='''
+A patch that allows key bindings to support combination keys (e.g. Ctrl+C, Alt+X, Shift+W, etc.).
+'''
+
+[[dependencies.key_binding_patch]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.key_binding_patch]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20,1.21)"
+ordering="NONE"
+side="CLIENT"

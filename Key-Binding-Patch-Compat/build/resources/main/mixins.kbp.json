@@ -1,0 +1,20 @@
+{
+	"required": true,
+	"package": "com.kbp.client.mixin",
+	"minVersion": "0.8",
+	"refmap": "mixins.kbp.refmap.json",
+	"mixins": [],
+	"client": [
+		"ClientModLoaderMixin",
+		"KeyBindsListMixin",
+		"KeyBindsScreenMixin",
+		"KeyEntryMixin",
+		"KeyMappingLookupMixin",
+		"KeyMappingMixin",
+		"OptionsMixin",
+		"ToggleKeyMappingAccess"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

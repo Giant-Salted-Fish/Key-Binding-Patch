@@ -1,0 +1,5 @@
+{
+	"kbp.gui.config_title": "Shadow Key Binding",
+	"kbp.gui.alert_title": "Minecraft Restart Required",
+	"kbp.gui.alert_message": "Your changes require that Minecraft be restarted before taking effect."
+}
